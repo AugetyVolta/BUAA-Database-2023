@@ -74,12 +74,13 @@ WSGI_APPLICATION = "buaa_db.wsgi.application"
 DATABASES = {
     'default':
         {
-            'ENGINE': 'django.db.backends.mysql',  # 数据库引擎
-            'NAME': 'django',  # 数据库名称
-            'HOST': '127.0.0.1',  # 数据库地址，本机 ip 地址 127.0.0.1
-            'PORT': 3306,  # 端口
-            'USER': 'root',  # 数据库用户名
-            'PASSWORD': '123456789',  # 数据库密码
+            'ENGINE': 'django.db.backends.sqlite3',  # 数据库引擎
+            'NAME': BASE_DIR / 'db.sqlite3',
+            # 'NAME': 'django',  # 数据库名称
+            # 'HOST': '127.0.0.1',  # 数据库地址，本机 ip 地址 127.0.0.1
+            # 'PORT': 3306,  # 端口
+            # 'USER': 'root',  # 数据库用户名
+            # 'PASSWORD': '123456789',  # 数据库密码
         }
 }
 
