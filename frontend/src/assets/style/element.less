@@ -1,0 +1,76 @@
+.el-switch__action .el-icon {
+  color: black;
+}
+
+.circleBtn.el-button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.el-table {
+  .el-table__row td {
+    padding: 12px 0;
+  }
+
+  .warning-row {
+
+    color: rgb(247, 184, 67);
+    font-weight: bold;
+  }
+
+  // 表格显示超过两行后做溢出隐藏
+  .cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; //行数
+    -webkit-box-orient: vertical;
+  }
+}
+
+.el-select {
+  width: 100%;
+}
+
+.el-main {
+  padding: 0 !important;
+
+}
+
+.el-header {
+  height: 50px !important;
+  padding: 0px !important;
+}
+
+// 滚动条
+.el-scrollbar__bar {
+  z-index: 9;
+}
+
+.el-input__suffix {
+  position: absolute;
+  right: 6px;
+  top: 0px;
+}
+
+.el-dialog__body {
+  max-height: 70vh;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 3px;
+    // cursor: pointer;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 6px;
+    background: rgb(199, 200, 203);
+
+    &:hover {
+      background: rgb(159, 160, 161);
+    }
+  }
+}
