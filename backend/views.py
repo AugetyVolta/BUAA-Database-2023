@@ -137,7 +137,7 @@ def add_bookComment(request):
             # 获得被评价的书籍
             book = Book.objects.get(id=data.get('book_id'))
             book_comment = BookComment(content=data.get("content"),
-                                       book=book)
+                                       commented_book=book)
             book_comment.save()
             # 将用户和书评加入到用户书评对应表中
             user = User.objects.get(id=data.get('user_id'))
@@ -189,9 +189,9 @@ def add_tip(request):
         try:
             data = json.loads(request.body)
             # 获得所属圈子
-            community = Community.objects.get(data.get('community_id'))
+            community = Community.objects.get(id=data.get('community_id'))
             # 获得发帖用户
-            user = User.objects.get(data.get('user_id'))
+            user = User.objects.get(id=data.get('user_id'))
             tip = Tip(content=data.get('content'),
                       community=community,
                       user=user)
