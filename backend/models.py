@@ -10,7 +10,7 @@ class Photo(models.Model):
     path = models.CharField(verbose_name="图片路径", max_length=100, blank=False)
 
 
-# 用户表(用户id,用户名,昵称,密码,性别,年龄,头像id)
+# 用户表(用户id,用户名,昵称,密码,性别,年龄)
 class User(models.Model):
     id = models.AutoField(primary_key=True)
     account = models.CharField(verbose_name="用户名", max_length=50, blank=False)
@@ -18,8 +18,6 @@ class User(models.Model):
     password = models.CharField(verbose_name="密码", max_length=255, blank=False)
     gender = models.CharField(verbose_name="性别", max_length=5, blank=True)
     age = models.IntegerField(verbose_name="年龄", blank=True)
-    # 外键
-    profile_photo = models.ForeignKey(Photo, on_delete=models.PROTECT, default=1)
 
 
 # 书籍表(书籍id,书名,作者,内容介绍,图片id)

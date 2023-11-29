@@ -105,8 +105,8 @@ def modify_user(request):
         try:
             data = json.loads(request.body)
             User.objects.filter(account=data["account"]).update(nickname=data.get('nickname'),
-                                                                            age=data.get('age'),
-                                                                            gender=data.get('gender'))
+                                                                age=data.get('age'),
+                                                                gender=data.get('gender'))
             res_data = User.objects.filter(account=data['account']).values().first()
             res["code"] = 200
             res['message'] = '更新成功'
