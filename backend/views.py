@@ -53,18 +53,6 @@ def add_user(request):
     return JsonResponse(res)
 
 
-def token_encryption(user, duration):  # 需要两个参数，用户登录信息和token保存时长（第二个参数表示天数）
-    salt = "*&&%^%#$$"
-    payload = {
-        "user_account": user["user_account"],
-        "key": user["key"],
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=duration),  # exp 配置token有效时长天数
-    }
-    token = jwt.encode(payload=payload, key=salt, algorithm="HS256")
-    # encoded_jwt = str(token, encoding="ascii")
-    return token
-
-
 # 登录
 def user_login(request):
     res = {"code": 400, "message": "", "data": None}
@@ -76,7 +64,8 @@ def user_login(request):
             if password == user['password']:
                 res["code"] = 200
                 res["message"] = "success"
-                user_data = {'account': user['account'], 'nickname': user['password']}
+                user_data = {'id': user['id'], 'account': user['account'], 'nickname': user['nickname'],
+                             'gender': user['gender'], 'age': user['age']}
                 response_data = {"user_data": user_data, "token": user_data}
                 res["data"] = response_data
             else:
@@ -86,6 +75,27 @@ def user_login(request):
     except Exception as e:
         res["message"] = "服务器错误，错误原因：" + str(e)
         res["code"] = 500
+    return JsonResponse(res)
+
+
+def change_password(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user = User.objects.filter(account=data["user_account"]).values().first()
+            old_password = data["old_password"]
+            if old_password == user['password']:
+                User.objects.filter(account=data['user_account']).update(password=data['new_password'])
+                res['code'] = 200
+                res['message'] = '修改成功'
+            else:
+                res['message'] = '原始密码错误'
+        except Exception as e:
+            res['code'] = 500
+            res["message"] = "服务器错误：" + str(e)
+    else:
+        res['message'] = '请使用POST方式提交'
     return JsonResponse(res)
 
 
