@@ -99,6 +99,26 @@ def change_password(request):
     return JsonResponse(res)
 
 
+def modify_user(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            User.objects.filter(account=data["account"]).update(nickname=data.get('nickname'),
+                                                                            age=data.get('age'),
+                                                                            gender=data.get('gender'))
+            res_data = User.objects.filter(account=data['account']).values().first()
+            res["code"] = 200
+            res['message'] = '更新成功'
+            res['data'] = res_data
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
 # 添加书籍
 def add_book(request):
     res = {"code": 400, "message": "", "data": None}
