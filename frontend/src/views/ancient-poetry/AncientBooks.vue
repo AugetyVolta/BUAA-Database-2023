@@ -27,10 +27,9 @@ const getAncientBooksList = () => {
     isGetMore.value = false
     return
   }
-  ancientBooksApi.getAncientBooksList(params.value).then((res: any) => {
-    //console.log(res.data)
+  ancientBooksApi.getAncientBooksList(params.value.name).then((res: any) => {
     //res.data才是需要的数据
-    list.value = list.value.concat(res.data)
+    list.value = list.value.concat(res.data.data)
     total.value = res.data.total
   })
 }

@@ -30,17 +30,26 @@ export const ancientPoetryApi = {
     }
 }
 export const ancientBooksApi = {
-    getAncientBooksList(params = {}) {
-        return axios.get('/api/get_books', params)
+    getAncientBooksList(name) {
+        return axios.get('/api/get_books', {
+            params:
+                {
+                    "name": name
+                }
+        })
     },
     getAncientBooksInfo(id) {
         return axios.get(`/api/get_bookInfo?id=${id}`)
     },
-
     addNewReview(params = {}) {
         return axios.post(`/api/add_bookComment`, params)
+    },
+    addToFavorites(params = {}) {
+        return axios.post('/api/add_favourite', params)
+    },
+    removeFromFavorites(params = {}) {
+        return axios.post('/api/remove_favourite', params)
     }
-
 }
 
 

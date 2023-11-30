@@ -16,7 +16,8 @@ const ancientBookData = ref({
   pic_url: "",
   label: [],      //标签
   author: "",
-  average_score:0.0
+  average_score: 0.0,
+  isBookFavorite: false, // 添加这个属性来表示书籍是否已经收藏
 })
 const getAncientPoetryDetail = async () => {
   const {data} = await ancientBooksApi.getAncientBooksInfo(route.query.id)
@@ -46,7 +47,7 @@ const userForm = reactive<userType>({
   nickname: "",
   age: null,
   gender: "",
-  id:0
+  id: 0
 })
 
 const userData = ref(localUserData && localUserData !== 'undefined' ? JSON.parse(localUserData as string) : userForm)
@@ -70,7 +71,7 @@ const newReview = reactive<reviewFrom>({
 
 const newReviewFormRules = {
   reviewContent: [
-    { required: true, message: '请输入书评内容', trigger: 'blur' }
+    {required: true, message: '请输入书评内容', trigger: 'blur'}
   ]
 };
 
@@ -79,21 +80,53 @@ const submitReview = async () => {
     ElMessage.warning("书评内容不可为空")
     resetForm()
   } else {
-        console.log(newReview)
-        ancientBooksApi.addNewReview(newReview).then(async (res: any) => {
-          if (res.data.code == 200) {
-            ElMessage.success("书评添加成功")
-            const {data} = await ancientBooksApi.getAncientBooksInfo(route.query.id)
-            ancientBookData.value = data.data
-            addReviewDialogVisible.value = false;
-          }
-        })
+    ancientBooksApi.addNewReview(newReview).then(async (res: any) => {
+      if (res.data.code == 200) {
+        ElMessage.success("书评添加成功")
+        const {data} = await ancientBooksApi.getAncientBooksInfo(route.query.id)
+        ancientBookData.value = data.data
+        addReviewDialogVisible.value = false;
+      }
+    })
   }
 }
+
 function resetForm() {
   newReview.reviewContent = '';
   newReview.starRating = 0;
 }
+
+//收藏
+
+interface favouriteFrom {
+  user_id: number,
+  book_id: number,
+}
+
+const favourite = reactive<favouriteFrom>({
+  user_id: userData.value.id,
+  book_id: Number(route.query.id),
+})
+
+//实现收藏逻辑
+const addToFavorites = () => {
+  ancientBooksApi.addToFavorites(favourite).then(async (res: any) => {
+    if (res.data.code == 200) {
+      ElMessage.success("收藏成功")
+    }
+  })
+  ancientBookData.value.isBookFavorite = true;
+};
+
+//取消收藏
+const removeFromFavorites = () => {
+  ancientBooksApi.removeFromFavorites(favourite).then(async (res: any) => {
+    if (res.data.code == 200) {
+      ElMessage.success("取消收藏成功")
+    }
+  })
+  ancientBookData.value.isBookFavorite = false;
+};
 
 </script>
 <template>
@@ -111,45 +144,54 @@ function resetForm() {
             <img :src="ancientBookData.pic_url"/>
           </div>
           <div class="bottom">
-            <p class="author">{{"作者：" + ancientBookData.author}}</p>
-            <p class="introduction">{{"简介：" + ancientBookData.introduce }}</p>
-             <div class="labels"> #标签：
-            <span class="label" v-for="(item, index) in ancientBookData.label" :key="index">
-               {{ item }}
-            </span>
+            <p class="author">{{ "作者：" + ancientBookData.author }}</p>
+            <p class="introduction">{{ "简介：" + ancientBookData.introduce }}</p>
+            <div class="labels">
+              #标签：
+              <span class="label" v-for="(item, index) in ancientBookData.label" :key="index">
+            {{ item }}
+          </span>
             </div>
             <div class="rating">
-          <el-rate v-model="ancientBookData.average_score" size="large" show-score="true" allow-half disabled  score-template="{value} 分"></el-rate>
-        </div>
+              <el-rate v-model="ancientBookData.average_score" size="large" show-score="true" allow-half disabled
+                       score-template="{value} 分"></el-rate>
+            </div>
+            <!-- 添加红心按钮 -->
+            <el-button type="danger" v-if="!ancientBookData.isBookFavorite" @click="addToFavorites">
+              <i class="el-icon-heart-off"></i> 收藏
+            </el-button>
+            <el-button type="danger" v-else @click="removeFromFavorites">
+              <i class="el-icon-heart-on"></i> 取消收藏
+            </el-button>
           </div>
         </div>
       </el-card>
-    <el-button type="primary" @click="addReviewDialogVisible = true">增加书评</el-button>
-
-    <el-dialog title="增加书评" v-model="addReviewDialogVisible" width="40%">
-      <el-form :model="newReview" :rules="newReviewFormRules" ref="newReviewFormRef">
-        <el-form-item label="书评内容" prop="reviewContent">
-          <el-input v-model="newReview.reviewContent" type="textarea" :rows="4"></el-input>
-        </el-form-item>
-        <el-form-item label="五星评价">
-          <el-rate v-model="newReview.starRating" :max="5" allow-half show-score></el-rate>
-        </el-form-item>
-        <el-form-item>
-          <div class="button-group">
-          <el-button type="primary" @click="submitReview">提交</el-button>
-          <el-button @click="resetForm">重置</el-button>
-          </div>
-        </el-form-item>
-      </el-form>
-    </el-dialog>
+      <el-button type="primary" @click="addReviewDialogVisible = true">增加书评</el-button>
+      <el-dialog title="增加书评" v-model="addReviewDialogVisible" width="40%">
+        <el-form :model="newReview" :rules="newReviewFormRules" ref="newReviewFormRef">
+          <el-form-item label="书评内容" prop="reviewContent">
+            <el-input v-model="newReview.reviewContent" type="textarea" :rows="4"></el-input>
+          </el-form-item>
+          <el-form-item label="五星评价">
+            <el-rate v-model="newReview.starRating" :max="5" allow-half show-score></el-rate>
+          </el-form-item>
+          <el-form-item>
+            <div class="button-group">
+              <el-button type="primary" @click="submitReview">提交</el-button>
+              <el-button @click="resetForm">重置</el-button>
+            </div>
+          </el-form-item>
+        </el-form>
+      </el-dialog>
       <br/>
       <br>
       <el-timeline v-if="Array.isArray(ancientBookData.content)">
         <el-timeline-item v-for="(item, index) in ancientBookData.content" :id="'book' + index" size="large"
                           color="#0bbd87" :timestamp="item.name" :key="index" placement="top">
           <el-card v-if="Array.isArray(item.content_arr)">
-           <el-rate v-model="item.score" :max="5" :show-text="false"  :disabled="true"></el-rate>
+            <el-rate v-model="item.score" :max="5" :show-text="false" :disabled="true"></el-rate>
             <p v-for="(v, i) in item.content_arr" style="padding: 10px 0;" :key="'book' + i">{{ v }}</p>
+            <p style="margin-top: 10px;color: #888888;">{{ new Date(item.create_time).toLocaleString() }}</p>
           </el-card>
         </el-timeline-item>
       </el-timeline>
@@ -163,12 +205,15 @@ function resetForm() {
   width: 100%;
   margin-top: 20px;
 }
+
 .button-group > .el-button + .el-button {
   margin-left: 30px;
 }
+
 .add-review-btn {
   float: right;
 }
+
 .rating {
   display: flex;
   align-items: center;
@@ -180,6 +225,7 @@ function resetForm() {
   font-size: 16px;
   font-weight: bold;
 }
+
 .label {
   margin-right: 8px;
   margin-bottom: 8px;
@@ -202,7 +248,6 @@ function resetForm() {
 .introduction {
   margin-bottom: 16px;
 }
-
 
 
 .book-detail-layout {

@@ -68,7 +68,9 @@ class UserBookRelation(models.Model):
 # 圈子(圈子id,主题)
 class Community(models.Model):
     id = models.AutoField(primary_key=True)
+    title = models.CharField(verbose_name="圈子名称", max_length=50, blank=False, default="")
     topic = models.TextField(verbose_name="主题", blank=False)
+    create_time = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
 
 
 # 用户创建圈子表(id,用户id,圈子id)

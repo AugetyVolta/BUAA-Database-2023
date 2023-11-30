@@ -12,6 +12,7 @@ from backend.filters import BooksFilter
 from backend.models import Book, Community, User, Photo, Favourite, Score, BookComment, UserBookRelation, Tip, Label, \
     BookLabelRelation, OwnedCommunity, Comment
 from backend.seralizers import BooksSerializer
+from django.core import serializers
 
 
 # Create your views here.
@@ -164,10 +165,30 @@ def add_book(request):
     return JsonResponse(res)
 
 
-class BooksListAPIView(generics.ListAPIView):
-    queryset = Book.objects.all().order_by("id")
-    serializer_class = BooksSerializer
-    filterset_class = BooksFilter
+def getBookList(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        book_name = request.GET.get('name')
+        if book_name == '':
+            books = Book.objects.all().order_by("id")
+        else:
+            books = Book.objects.filter(name=book_name).order_by("id")
+        res['data'] = []
+        data_item = {"id": 0, "name": "", "pic_url": "", "description": ""}
+        for book in books:
+            data_item['id'] = book.id
+            data_item['name'] = book.name
+            data_item['pic_url'] = book.pic_url
+            data_item['description'] = book.description
+            res['data'].append(data_item)
+            data_item = {"id": 0, "name": "", "pic_url": "", "description": ""}
+        res["code"] = 200
+        res["message"] = "success"
+
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误：" + str(e)
+    return JsonResponse(res)
 
 
 def get_bookInfo(request):
@@ -192,15 +213,17 @@ def get_bookInfo(request):
             data['label'].append(Label.objects.get(id=label_id).content)
         # 评论内容
         data['content'] = []
-        content_item = {"name": "", "content_arr": [], "score": 0.0}
+        content_item = {"name": "", "content_arr": [], "score": 0.0, "create_time": ""}
         book_comment_dict = BookComment.objects.filter(commented_book=request.GET.get('id')).order_by(
-            '-create_time').values('id', 'content')
+            '-create_time').values('id', 'content', 'create_time')
         for item in book_comment_dict:
             content_item["content_arr"].append(item['content'])
             # 评论对应的id
             book_comment_id = item['id']
             # 书评对应的用户id
             user_id = UserBookRelation.objects.get(comment=book_comment_id).user.id
+            # 创建时间
+            content_item["create_time"] = item['create_time']
             # 找到对应的用户名
             content_item["name"] = User.objects.get(id=user_id).nickname
             # 找到用户的评分
@@ -209,7 +232,7 @@ def get_bookInfo(request):
                                                              'id'))).first().score if Score.objects.filter(
                 user=User.objects.get(id=user_id), book=Book.objects.get(id=request.GET.get('id'))) else 0
             data['content'].append(content_item)
-            content_item = {"name": "", "content_arr": [], "score": 0.0}
+            content_item = {"name": "", "content_arr": [], "score": 0.0, "create_time": ""}
         res["code"] = 200
         res["message"] = "success"
         res["data"] = data
@@ -240,6 +263,29 @@ def add_favourite(request):
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：收藏失败" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+# 取消收藏
+def remove_favourite(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            # 获得书评的用户
+            user = User.objects.get(id=data.get('user_id'))
+            # 获得被评论的书籍
+            book = Book.objects.get(id=data.get('book_id'))
+            Favourite.objects.filter(user=user,
+                                     book=book).delete()
+            res["code"] = 200
+            res["message"] = "success"
+            print('-------------------remove_favourite-------------------')
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：取消收藏失败" + str(e)
     else:
         res["message"] = "请使用POST方法"
     return JsonResponse(res)
@@ -311,6 +357,7 @@ def add_community(request):
         try:
             data = json.loads(request.body)
             community = Community(
+                tilte=data.get('title'),
                 topic=data.get('topic'))
             community.save()
             # 加入到用户拥有圈子表中
