@@ -1,6 +1,7 @@
 import datetime
 
 import jwt
+from django.db.models import Avg
 from django.http import HttpResponse, JsonResponse
 import json
 from django.shortcuts import render
@@ -71,6 +72,7 @@ def user_login(request):
                              'gender': user['gender'], 'age': user['age']}
                 response_data = {"user_data": user_data, "token": user_data}
                 res["data"] = response_data
+                print('-------------------user_login-------------------')
             else:
                 res['message'] = "密码输入错误"
         else:
@@ -92,6 +94,7 @@ def change_password(request):
                 User.objects.filter(account=data['user_account']).update(password=data['new_password'])
                 res['code'] = 200
                 res['message'] = '修改成功'
+                print('-------------------change_password-------------------')
             else:
                 res['message'] = '原始密码错误'
         except Exception as e:
@@ -114,6 +117,7 @@ def modify_user(request):
             res["code"] = 200
             res['message'] = '更新成功'
             res['data'] = res_data
+            print('-------------------modify_user-------------------')
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：" + str(e)
@@ -153,19 +157,46 @@ class BooksListAPIView(generics.ListAPIView):
 def get_bookInfo(request):
     res = {"code": 400, "message": "", "data": None}
     try:
-        data = {"content": [], "pic_url": "", "title": "", "author": "", "introduce": "", 'label': []}
+        data = {"content": [], "pic_url": "", "title": "", "author": "", "introduce": "", 'label': [],
+                "average_score": 0.0}
         book = Book.objects.filter(id=request.GET.get('id')).values().first()
-        data["introduce"] = book["description"]
+        data['introduce'] = book['description']
         data['pic_url'] = book['pic_url']
-        data['title'] = book["name"]
+        data['title'] = book['name']
         data['author'] = book['author']
-        data['label'] = ["悬疑惊悚", "测试", "aaaa"]
-        data['content'] = [{"name": "测试书籍", "content_arr": ["abcdfsfsffs", "你好", "确实挺不错的"]},
-                           {"name": "测试书籍", "content_arr": ["abcdfsfsffs", "你好", "确实挺不错的"]},
-                           {"name": "2222   ", "content_arr": ["abcdfsfsffs", "你好", "确实挺不错的"]}]
+        # 平均打分
+        data['average_score'] = '%.1f' % Score.objects.filter(book_id=request.GET.get('id')).aggregate(
+            Avg('score')).get(
+            'score__avg') if Score.objects.filter(book_id=request.GET.get('id')) else 0
+        # 书籍label
+        data['label'] = []
+        bookLabelRelation_dict = BookLabelRelation.objects.filter(book=request.GET.get('id')).values('label')
+        for item in bookLabelRelation_dict:
+            label_id = item['label']
+            data['label'].append(Label.objects.get(id=label_id).content)
+        # 评论内容
+        data['content'] = []
+        content_item = {"name": "", "content_arr": [], "score": 0.0}
+        book_comment_dict = BookComment.objects.filter(commented_book=request.GET.get('id')).values('id', 'content')
+        for item in book_comment_dict:
+            content_item["content_arr"].append(item['content'])
+            # 评论对应的id
+            book_comment_id = item['id']
+            # 书评对应的用户id
+            user_id = UserBookRelation.objects.get(comment=book_comment_id).user.id
+            # 找到对应的用户名
+            content_item["name"] = User.objects.get(id=user_id).nickname
+            # 找到用户的评分
+            content_item["score"] = Score.objects.filter(user=User.objects.get(id=user_id),
+                                                         book=Book.objects.get(id=request.GET.get(
+                                                             'id'))).first().score if Score.objects.filter(
+                user=User.objects.get(id=user_id), book=Book.objects.get(id=request.GET.get('id'))) else 0
+            data['content'].append(content_item)
+            content_item = {"name": "", "content_arr": [], "score": 0.0}
         res["code"] = 200
         res["message"] = "success"
         res["data"] = data
+        print('-------------------get_bookInfo-------------------')
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：" + str(e)
