@@ -7,11 +7,8 @@ import json
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 from rest_framework import generics
-
-from backend.filters import BooksFilter
 from backend.models import Book, Community, User, Photo, Favourite, Score, BookComment, UserBookRelation, Tip, Label, \
     BookLabelRelation, OwnedCommunity, Comment
-from backend.seralizers import BooksSerializer
 from django.core import serializers
 
 
@@ -172,7 +169,8 @@ def getBookList(request):
         if book_name == '':
             books = Book.objects.all().order_by("id")
         else:
-            books = Book.objects.filter(name=book_name).order_by("id")
+            # 模糊搜索
+            books = Book.objects.filter(name__icontains=book_name).order_by("id")
         res['data'] = []
         data_item = {"id": 0, "name": "", "pic_url": "", "description": ""}
         for book in books:
