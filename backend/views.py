@@ -261,7 +261,7 @@ def add_bookComment(request):
             data = json.loads(request.body)
             # 获得被评价的书籍
             book = Book.objects.get(id=data.get('book_id'))
-            book_comment = BookComment(content=data.get("content"),
+            book_comment = BookComment(content=data.get('reviewContent'),
                                        commented_book=book)
             book_comment.save()
             # 将用户和书评加入到用户书评对应表中
@@ -271,6 +271,11 @@ def add_bookComment(request):
                 comment=book_comment
             )
             userBookRelation.save()
+            # 增加评分
+            score = Score(score=data.get('starRating'),
+                          user=user,
+                          book=book)
+            score.save()
             res["code"] = 200
             res["message"] = "success"
             print('-------------------add_bookComment-------------------')
