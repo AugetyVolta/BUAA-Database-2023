@@ -36,6 +36,11 @@ export const ancientBooksApi = {
     getAncientBooksInfo(id) {
         return axios.get(`/api/get_bookInfo?id=${id}`)
     },
+
+    addNewReview(params = {}) {
+        return axios.post(`/api/add_bookComment`, params)
+    }
+
 }
 
 
