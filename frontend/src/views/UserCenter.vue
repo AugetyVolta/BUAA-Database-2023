@@ -3,20 +3,23 @@
  -->
 <script lang="ts" setup>
 import {ref, reactive, onMounted} from 'vue';
-import { ElMessage } from 'element-plus';
-import { useRouter } from 'vue-router';
+import {ElMessage} from 'element-plus';
+import {useRouter} from 'vue-router';
 import JSEncrypt from 'jsencrypt'
-import { changePassword, modifyUserData } from '@/apis/users'
-import { useMainStore } from '@/store/index'
+import {changePassword, modifyUserData} from '@/apis/users'
+import {useMainStore} from '@/store/index'
+
 const mainStore = useMainStore()
 const router = useRouter()
 const localUserData = localStorage.getItem("user_data")
+
 interface userType {
   account: string,
   nickname: string,
   age: null | number,
   gender: string
 }
+
 const userForm = reactive<userType>({
   account: "",
   nickname: "",
@@ -27,14 +30,15 @@ const userForm = reactive<userType>({
 const userData = ref(localUserData && localUserData !== 'undefined' ? JSON.parse(localUserData as string) : userForm)
 const rules = ref({
   nickname: [
-    { required: true, message: '请输入姓名', trigger: 'blur' },
-    { min: 2, message: '姓名长度最少为2个字符', trigger: 'blur' }
+    {required: true, message: '请输入姓名', trigger: 'blur'},
+    {min: 2, message: '姓名长度最少为2个字符', trigger: 'blur'}
   ],
 })
 let showEditPssswordDialog = ref<boolean>(false)
 const onSubmit = () => {
   modifyUserData(userData.value).then((res: any) => {
-    if (res.code == 200) {
+    //res里面有一层data,data里面有code,是两层
+    if (res.data.code == 200) {
       ElMessage.success("修改成功")
       localStorage.setItem("user_data", JSON.stringify(res.data.data))
       mainStore.reloadApp()
@@ -64,9 +68,9 @@ const validatePassword = (rule: any, value: string, callback: Function) => {
   }
 }
 const psdEditRules = reactive({
-  old_password: [{ required: true, message: "请输入原始密码" }],
-  new_password: [{ required: true, trigger: 'change', validator: validatePassword }],
-  confirm_new_password: [{ required: true, trigger: 'change', validator: validateRePassword }],
+  old_password: [{required: true, message: "请输入原始密码"}],
+  new_password: [{required: true, trigger: 'change', validator: validatePassword}],
+  confirm_new_password: [{required: true, trigger: 'change', validator: validateRePassword}],
 })
 
 const editPsd = () => {
@@ -75,7 +79,7 @@ const editPsd = () => {
     console.log("wait to enter in")
     if (res.data.code === 200) {
       console.log("enter in")
-      router.push({ path: "/login" });
+      router.push({path: "/login"});
       localStorage.removeItem("token")
       localStorage.removeItem("user_data")
       ElMessage.success("密码修改成功，登录信息已注销，请重新登录");
@@ -84,12 +88,12 @@ const editPsd = () => {
   })
 }
 
-onMounted(()=>{
+onMounted(() => {
   console.log(userData.account)
   console.log("hello")
 })
 </script>
-  
+
 <template>
   <dl class="user-center-layout">
     <dt>
@@ -120,13 +124,13 @@ onMounted(()=>{
     <el-dialog title="密码修改" v-model="showEditPssswordDialog" width="50%">
       <el-form label-width="100px" :model="passwordForm" :rules="psdEditRules">
         <el-form-item prop="old_password" label="原始密码：">
-          <el-input size="large" v-model="passwordForm.old_password" show-password type="password" />
+          <el-input size="large" v-model="passwordForm.old_password" show-password type="password"/>
         </el-form-item>
         <el-form-item prop="new_password" label="更新密码：">
-          <el-input size="large" v-model="passwordForm.new_password" show-password type="password" />
+          <el-input size="large" v-model="passwordForm.new_password" show-password type="password"/>
         </el-form-item>
         <el-form-item prop="confirm_new_password" label="确认密码：">
-          <el-input size="large" v-model="passwordForm.confirm_new_password" show-password type="password" />
+          <el-input size="large" v-model="passwordForm.confirm_new_password" show-password type="password"/>
         </el-form-item>
       </el-form>
       <template #footer>

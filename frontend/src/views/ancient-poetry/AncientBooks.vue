@@ -1,19 +1,22 @@
 <script lang="ts" setup>
-import { ref, } from 'vue'
-import { useRouter, useRoute } from 'vue-router';
-import { ElMessage } from 'element-plus';
-import { ancientBooksApi } from '@/apis/ancient-poetry'
+import {ref,} from 'vue'
+import {useRouter, useRoute} from 'vue-router';
+import {ElMessage} from 'element-plus';
+import {ancientBooksApi} from '@/apis/ancient-poetry'
+
 const router = useRouter()
 const route = useRoute()
+
 interface ParamsType {
   page: number,
   limit: number,
-  title: string
+  name: string
 }
+
 let params = ref<ParamsType>({
   page: 1,
   limit: 10,
-  title: '',
+  name: '',
 })
 let list = ref([])
 let total = ref(0)
@@ -25,7 +28,9 @@ const getAncientBooksList = () => {
     return
   }
   ancientBooksApi.getAncientBooksList(params.value).then((res: any) => {
-    list.value = list.value.concat(res.data.result)
+    //console.log(res.data)
+    //res.data才是需要的数据
+    list.value = list.value.concat(res.data)
     total.value = res.data.total
   })
 }
@@ -42,8 +47,8 @@ const loadingMoreData = () => {
   getAncientBooksList()
   params.value.page += 1
 }
-const goBookDetail = (id: number | string) => {
-  router.push({ path: '/ancient/poetry/book', query: { id, } })
+const goBookDetail = (id: number) => {
+  router.push({path: '/ancient/poetry/book', query: {id,}})
 }
 </script>
 <template>
@@ -52,36 +57,36 @@ const goBookDetail = (id: number | string) => {
       <div class="search-container">
         <h4 class="layout-title">古籍学习</h4>
         <div class="search">
-          <el-input clearable @keydown.enter="handleSearch" @clear="handleSearch" size="large" v-model="params.title"
-            placeholder="请输入古籍名称">
+          <el-input clearable @keydown.enter="handleSearch" @clear="handleSearch" size="large" v-model="params.name"
+                    placeholder="请输入古籍名称">
             <template #append>
-              <el-button icon="Search" @click="handleSearch" />
+              <el-button icon="Search" @click="handleSearch"/>
             </template>
           </el-input>
         </div>
       </div>
     </div>
     <div class="content-box scroll-bar" v-infinite-scroll="loadingMoreData">
-      <el-row v-if="Array.isArray(list) && list.length > 0">
+      <el-row v-if="Array.isArray(list) && list.length >0">
         <el-col v-for="(item) in list" :key="item.id" :span="6">
           <div class="content-container">
             <el-tooltip placement="right" effect="light">
               <template #content>
                 <h3>
-                  《{{ item.title }}》
+                  《{{ item.name }}》
                 </h3>
                 <div style="width: 350px;">
-                  {{ item.introduce }}
+                  {{ item.description }}
                 </div>
               </template>
-              <img @click.stop="goBookDetail(item.id)" :src="item.pic_url" :alt="item.title" class="image" />
+              <img @click.stop="goBookDetail(item.id)" :src="item.pic_url" :alt="item.name" class="image"/>
             </el-tooltip>
           </div>
         </el-col>
       </el-row>
       <div class="empty" v-else>
 
-        <el-empty description="数据为空" />
+        <el-empty description="数据为空"/>
       </div>
     </div>
   </div>

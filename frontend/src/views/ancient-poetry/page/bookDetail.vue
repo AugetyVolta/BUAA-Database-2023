@@ -1,7 +1,9 @@
 <script lang="ts" setup>
-import { ref, } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { ancientBooksApi } from '@/apis/ancient-poetry'
+import {ref,} from 'vue';
+import {useRouter, useRoute} from 'vue-router';
+import {ancientBooksApi} from '@/apis/ancient-poetry'
+import {da} from "element-plus/es/locale";
+
 const router = useRouter()
 const route = useRoute()
 const ancientBookData = ref({
@@ -9,20 +11,21 @@ const ancientBookData = ref({
   introduce: "",    //简介
   content: [],     //书评
   pic_url: "",
-  label : [],      //标签
+  label: [],      //标签
+  author: ""
 })
 const getAncientPoetryDetail = async () => {
-  const { data } = await ancientBooksApi.getAncientBooksInfo(route.query.id)
-  ancientBookData.value = data
+  const {data} = await ancientBooksApi.getAncientBooksInfo(route.query.id)
+  ancientBookData.value = data.data
 }
 getAncientPoetryDetail()
 const goIndex = () => {
-  router.push({ path: '/ancient/books' })
+  router.push({path: '/ancient/books'})
 }
 const scrollToElement = (index: number) => {
   const element: HTMLElement | null = document.getElementById("book" + index);
   if (element) {
-    element.scrollIntoView({ behavior: "smooth" });
+    element.scrollIntoView({behavior: "smooth"});
   }
 }
 
@@ -36,16 +39,16 @@ const scrollToElement = (index: number) => {
       <b>{{ ancientBookData.title }}</b>
     </div>
     <div class="book-content scroll-bar">
-      <el-backtop target=".book-content" :visibility-height="500" />
+      <el-backtop target=".book-content" :visibility-height="500"/>
       <el-card :body-style="{ padding: '10px' }" style="margin-bottom: 45px;">
         <div class="conent-head">
           <div class="image">
-            <img :src="ancientBookData.pic_url" />
+            <img :src="ancientBookData.pic_url"/>
           </div>
           <div class="bottom">
             {{ ancientBookData.introduce }}
             <div class="total-content"
-              v-if="Array.isArray(ancientBookData.content) && ancientBookData.content.length > 0">
+                 v-if="Array.isArray(ancientBookData.content) && ancientBookData.content.length > 0">
               <h4>共有章节【{{ ancientBookData.content.length }}】章</h4>
               <span class="content-title" v-for="(item, index) in ancientBookData.content" :key="index">
 
@@ -57,7 +60,7 @@ const scrollToElement = (index: number) => {
       </el-card>
       <el-timeline v-if="Array.isArray(ancientBookData.content)">
         <el-timeline-item v-for="(item, index) in ancientBookData.content" :id="'book' + index" size="large"
-          color="#0bbd87" :timestamp="item.name" :key="index" placement="top">
+                          color="#0bbd87" :timestamp="item.name" :key="index" placement="top">
           <el-card v-if="Array.isArray(item.content_arr)">
             <p v-for="(v, i) in item.content_arr" style="padding: 10px 0;" :key="'book' + i">{{ v }}</p>
           </el-card>

@@ -5,29 +5,32 @@ from django.http import HttpResponse, JsonResponse
 import json
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
+from rest_framework import generics
 
+from backend.filters import BooksFilter
 from backend.models import Book, Community, User, Photo, Favourite, Score, BookComment, UserBookRelation, Tip, Label, \
     BookLabelRelation, OwnedCommunity, Comment
+from backend.seralizers import BooksSerializer
 
 
 # Create your views here.
-# 添加照片
-def add_photo(request):
-    res = {"code": 400, "message": "", "data": None}
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            photo = Photo(path=data.get('path'))
-            photo.save()
-            res["code"] = 200
-            res["message"] = "success"
-            print('-------------------add_photo-------------------')
-        except Exception as e:
-            res["code"] = 500
-            res["message"] = "服务器错误：图片创建失败" + str(e)
-    else:
-        res["message"] = "请使用POST方法"
-    return JsonResponse(res)
+# # 添加照片
+# def add_photo(request):
+#     res = {"code": 400, "message": "", "data": None}
+#     if request.method == "POST":
+#         try:
+#             data = json.loads(request.body)
+#             photo = Photo(path=data.get('path'))
+#             photo.save()
+#             res["code"] = 200
+#             res["message"] = "success"
+#             print('-------------------add_photo-------------------')
+#         except Exception as e:
+#             res["code"] = 500
+#             res["message"] = "服务器错误：图片创建失败" + str(e)
+#     else:
+#         res["message"] = "请使用POST方法"
+#     return JsonResponse(res)
 
 
 # 创建用户
@@ -125,12 +128,10 @@ def add_book(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            # 获得书籍对应的图片
-            photo = Photo.objects.get(id=data.get('photo_id'))
             book = Book(name=data.get('name'),
                         author=data.get('author'),
                         description=data.get('description'),
-                        describe_photo=photo)
+                        pic_url=data.get('pic_url'))
             book.save()
             res["code"] = 200
             res["message"] = "success"
@@ -141,6 +142,35 @@ def add_book(request):
     else:
         res["message"] = "请使用POST方法"
     return JsonResponse(res)
+
+
+class BooksListAPIView(generics.ListAPIView):
+    queryset = Book.objects.all().order_by("id")
+    serializer_class = BooksSerializer
+    filterset_class = BooksFilter
+
+
+def get_bookInfo(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        data = {"content": [], "pic_url": "", "title": "", "author": "", "introduce": "", 'label': []}
+        book = Book.objects.filter(id=request.GET.get('id')).values().first()
+        data["introduce"] = book["description"]
+        data['pic_url'] = book['pic_url']
+        data['title'] = book["name"]
+        data['author'] = book['author']
+        data['label'] = ["悬疑惊悚", "测试", "aaaa"]
+        data['content'] = [{"name": "测试书籍", "content_arr": ["abcdfsfsffs", "你好", "确实挺不错的"]},
+                           {"name": "测试书籍", "content_arr": ["abcdfsfsffs", "你好", "确实挺不错的"]},
+                           {"name": "2222   ", "content_arr": ["abcdfsfsffs", "你好", "确实挺不错的"]}]
+        res["code"] = 200
+        res["message"] = "success"
+        res["data"] = data
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误：" + str(e)
+    finally:
+        return JsonResponse(res)
 
 
 # 添加收藏

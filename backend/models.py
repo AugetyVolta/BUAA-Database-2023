@@ -20,14 +20,13 @@ class User(models.Model):
     age = models.IntegerField(verbose_name="年龄", blank=True)
 
 
-# 书籍表(书籍id,书名,作者,内容介绍,图片id)
+# 书籍表(书籍id,书名,作者,内容介绍,图片路径)
 class Book(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(verbose_name="书名", max_length=50, blank=False)
     author = models.CharField(verbose_name="作者", max_length=50, blank=False)
     description = models.TextField(verbose_name="内容介绍", default="该书暂时没有介绍", blank=True)
-    # 外键
-    describe_photo = models.ForeignKey(Photo, on_delete=models.PROTECT)
+    pic_url = models.CharField(verbose_name="图片路径", max_length=250, blank=False, default="")
 
 
 # 收藏(收藏id,用户id,被收藏书id)
