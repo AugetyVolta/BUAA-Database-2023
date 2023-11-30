@@ -193,7 +193,8 @@ def get_bookInfo(request):
         # 评论内容
         data['content'] = []
         content_item = {"name": "", "content_arr": [], "score": 0.0}
-        book_comment_dict = BookComment.objects.filter(commented_book=request.GET.get('id')).values('id', 'content')
+        book_comment_dict = BookComment.objects.filter(commented_book=request.GET.get('id')).order_by(
+            '-create_time').values('id', 'content')
         for item in book_comment_dict:
             content_item["content_arr"].append(item['content'])
             # 评论对应的id
