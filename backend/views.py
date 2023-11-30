@@ -57,6 +57,22 @@ def add_user(request):
     return JsonResponse(res)
 
 
+def check_user(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        account = request.GET.get("account")
+        data = User.objects.filter(account=account).values().first()
+        if not data:
+            res['message'] = '用户账号可用'
+            res['code'] = 200
+        else:
+            res['message'] = "用户已注册"
+    except Exception as e:
+        res['message'] = '服务器错误：' + str(e)
+        res['code'] = 500
+    return JsonResponse(res)
+
+
 # 登录
 def user_login(request):
     res = {"code": 400, "message": "", "data": None}

@@ -18,12 +18,8 @@ export function login(data = {}) {
     return axios.post("/api/user_login", data)
 }
 
-export function checkUserAccount(data = {}) {
-    return service({
-        url: `/users/check`,
-        method: 'get',
-        params: data
-    })
+export function checkUserAccount(account) {
+    return axios.get(`/api/check_user?account=${account}`)
 }
 
 export function changePassword(data = {}) {

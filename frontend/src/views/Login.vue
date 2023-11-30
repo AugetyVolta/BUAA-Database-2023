@@ -1,31 +1,31 @@
-
 <script lang="ts" setup>
-import { onMounted, reactive, ref } from 'vue';
-import { ElMessage, ElNotification } from 'element-plus';
-import { useRouter } from 'vue-router';
+import {onMounted, reactive, ref} from 'vue';
+import {ElMessage, ElNotification} from 'element-plus';
+import {useRouter} from 'vue-router';
 import JSEncrypt from 'jsencrypt'
-import { getVerificationCode, register, login, checkUserAccount } from '@/apis/users'
-import { useMainStore } from '@/store/index'
-import { useDark } from '@vueuse/core';
+import {getVerificationCode, register, login, checkUserAccount} from '@/apis/users'
+import {useMainStore} from '@/store/index'
+import {useDark} from '@vueuse/core';
 
-import type { FormInstance, FormRules } from 'element-plus'
+import type {FormInstance, FormRules} from 'element-plus'
+
 const counterStore = useMainStore()
 const isDark = useDark()
 const initCanvas = () => {
   let canvas: any = document.getElementById('canvas'),
-    ctx = canvas.getContext('2d'),
-    w = canvas.width = window.innerWidth,
-    h = canvas.height = window.innerHeight,
-    hue = 217,
-    stars: any = [],
-    count = 0,
-    maxStars = 1400;
+      ctx = canvas.getContext('2d'),
+      w = canvas.width = window.innerWidth,
+      h = canvas.height = window.innerHeight,
+      hue = 217,
+      stars: any = [],
+      count = 0,
+      maxStars = 1400;
   let canvas2: any = document.createElement('canvas')
   let ctx2: any = canvas2.getContext('2d');
   canvas2.width = 100;
   canvas2.height = 100;
   let half = canvas2.width / 2,
-    gradient2 = ctx2.createRadialGradient(half, half, 0, half, half, half);
+      gradient2 = ctx2.createRadialGradient(half, half, 0, half, half, half);
   gradient2.addColorStop(0.025, '#fff');
   gradient2.addColorStop(0.1, 'hsl(' + hue + ', 61%, 33%)');
   gradient2.addColorStop(0.25, 'hsl(' + hue + ', 64%, 6%)');
@@ -34,6 +34,7 @@ const initCanvas = () => {
   ctx2.beginPath();
   ctx2.arc(half, half, half, 0, Math.PI * 2);
   ctx2.fill();
+
   // End cache
   function random(min: number, max: number) {
     if (arguments.length < 2) {
@@ -47,6 +48,7 @@ const initCanvas = () => {
     }
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
+
   class Star {
     orbitRadius: any
     radius: any
@@ -55,6 +57,7 @@ const initCanvas = () => {
     timePassed: any
     speed: any
     alpha: any
+
     constructor() {
       this.orbitRadius = random(0, w / 2 - 50);
       this.radius = random(100, this.orbitRadius) / 10;
@@ -66,12 +69,15 @@ const initCanvas = () => {
       count++;
       stars[count] = this;
     }
-    draw(): void { }
+
+    draw(): void {
+    }
   }
+
   Star.prototype.draw = function () {
     let x = Math.sin(this.timePassed + 1) * this.orbitRadius + this.orbitX,
-      y = Math.cos(this.timePassed) * this.orbitRadius / 2 + this.orbitY,
-      twinkle = random(0, 10);
+        y = Math.cos(this.timePassed) * this.orbitRadius / 2 + this.orbitY,
+        twinkle = random(0, 10);
     if (twinkle === 1 && this.alpha > 0) {
       this.alpha -= 0.05;
     } else if (twinkle === 2 && this.alpha < 1) {
@@ -94,9 +100,11 @@ const initCanvas = () => {
     let l = stars.length;
     for (let i = 1; i < l; i++) {
       stars[i].draw();
-    };
+    }
+    ;
     window.requestAnimationFrame(animation);
   }
+
   animation();
 }
 
@@ -105,6 +113,7 @@ const onChange = (): void => {
 }
 const mainStore = useMainStore()
 let isShowDialog = ref<boolean>(false)
+
 interface userType {
   account: string,
   nickname: string,
@@ -113,6 +122,7 @@ interface userType {
   gender: string,
   profilePhoto: number
 }
+
 const userForm = reactive<userType>({
   account: "",
   nickname: "",
@@ -126,10 +136,10 @@ const checkAccount = (rule: any, value: any, callback: any) => {
   if (value.length < 5) {
     return callback(new Error('注册账号长度不得低于5位'))
   }
-  checkUserAccount({ user_account: userForm.account }).then((res: any) => {
+  checkUserAccount(userForm.account).then((res: any) => {
     try {
-      if (res.code == 200) {
-        ElMessage.success(res.message)
+      if (res.data.code == 200) {
+        ElMessage.success(res.data.message)
         callback()
       } else {
         callback(new Error("注册信息已存在，请重新输入"))
@@ -142,9 +152,9 @@ const checkAccount = (rule: any, value: any, callback: any) => {
 
 const rules = reactive<FormRules<typeof userForm>>({
   account: [
-    { required: true, validator: checkAccount, trigger: "blur", }
+    {required: true, validator: checkAccount, trigger: "blur"}
   ],
-  nickname: [{ required: true, message: "用户中文名不能为空", trigger: "blur" }],
+  nickname: [{required: true, message: "用户中文名不能为空", trigger: "blur"}],
   password: [{
     required: true, message: "密码不能为空", trigger: "blur"
   }],
@@ -156,7 +166,7 @@ const onFinish = async (formEl: FormInstance | undefined) => {
   await formEl.validate((valid, fields) => {
     if (valid) {
       register(userForm).then((res: any) => {
-        if (res.code == 200) {
+        if (res.data.code == 200) {
           ElMessage.success("注册成功")
           isShowDialog.value = false
         }
@@ -190,7 +200,7 @@ const userLogin = () => {
   login(formData).then((res: any) => {
     //console.log(res.code)
     console.log(res.data)
-    if (res.data && res.data.code == 200 ) {
+    if (res.data && res.data.code == 200) {
       localStorage.setItem("token", "success");
       //console.log(localStorage.getItem("token"))
       //console.log("login:" + res.data.data.user_data)
@@ -198,13 +208,12 @@ const userLogin = () => {
       //console.log(localStorage.getItem("user_data"))
       ElMessage.success("登录成功")
       ElNotification.closeAll()
-      router.push({ path: "/home" })
-    }
-    else {
+      router.push({path: "/home"})
+    } else {
       ElMessage.warning("登录失败")
     }
   }).catch(() => {
-      ElMessage.warning("登录失败")
+    ElMessage.warning("登录失败")
   })
 }
 </script>
@@ -214,8 +223,8 @@ const userLogin = () => {
       <canvas id="canvas" v-show="isDark" :class="{ bg2: isDark }"></canvas>
       <img id="bg-img" v-show="!isDark" :class="{ bg1: !isDark }" src="@/assets/img/wallpaper.jpg" alt="">
       <el-switch class="right-switch" size="large" @change="onChange"
-        style="--el-switch-on-color: #2c2c2c; --el-switch-off-color: #f2f2f2;" v-model="isDark" inline-prompt
-        active-action-icon="Moon" inactive-action-icon="Sunny" />
+                 style="--el-switch-on-color: #2c2c2c; --el-switch-off-color: #f2f2f2;" v-model="isDark" inline-prompt
+                 active-action-icon="Moon" inactive-action-icon="Sunny"/>
       <div class="form-layout" :style="mainStore.isDark ? '' : 'background: #fff;'">
         <h3 class="system-title">
           星域平台管理系统
@@ -224,31 +233,33 @@ const userLogin = () => {
         <el-form :label-position="'top'" :model="loginForm">
           <el-form-item label="登录账号：">
             <el-input prefix-icon="User" placeholder="请输入登录账号" @keydown.enter="userLogin" size="large"
-              v-model="loginForm.account" />
+                      v-model="loginForm.account"/>
           </el-form-item>
           <el-form-item label="登录密码：">
-            <el-input prefix-icon="Lock" placeholder="请输入登录密码" @keydown.enter="userLogin" size="large" type="password"
-              show-password v-model="loginForm.password" />
+            <el-input prefix-icon="Lock" placeholder="请输入登录密码" @keydown.enter="userLogin" size="large"
+                      type="password"
+                      show-password v-model="loginForm.password"/>
           </el-form-item>
           <el-form-item style="padding-top: 30px;">
             <el-button size="large" style="width:66%" @click="userLogin" type="primary">登 录</el-button>
-            <el-button size="large" style="width:30%" @click="isShowDialog = true" type="success" plain>注 册</el-button>
+            <el-button size="large" style="width:30%" @click="isShowDialog = true" type="success" plain>注 册
+            </el-button>
           </el-form-item>
         </el-form>
       </div>
       <el-dialog top="3%" v-model="isShowDialog" title="用户注册" width="50%">
         <el-form :model="userForm" :rules="rules" ref="ruleFormRef" class="demo-ruleForm" label-width="120px">
-          <el-form-item prop="user_account" label="账号：">
-            <el-input size="large" v-model="userForm.account" autocomplete="off" />
+          <el-form-item prop="account" label="账号：">
+            <el-input size="large" v-model="userForm.account" autocomplete="off"/>
           </el-form-item>
-          <el-form-item prop="user_name" label="用户名：">
-            <el-input size="large" v-model="userForm.nickname" autocomplete="off" />
+          <el-form-item prop="nickname" label="用户名：">
+            <el-input size="large" v-model="userForm.nickname" autocomplete="off"/>
           </el-form-item>
           <el-form-item prop="password" label="密码：">
-            <el-input size="large" v-model="userForm.password" autocomplete="off" show-password type="password" />
+            <el-input size="large" v-model="userForm.password" autocomplete="off" show-password type="password"/>
           </el-form-item>
           <el-form-item label="年龄：" prop="age">
-            <el-input size="large" type="number" v-model="userForm.age" />
+            <el-input size="large" type="number" v-model="userForm.age"/>
           </el-form-item>
           <el-form-item size="large" label="性别：" prop="sex">
             <el-select v-model="userForm.gender">
