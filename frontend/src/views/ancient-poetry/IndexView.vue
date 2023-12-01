@@ -5,6 +5,7 @@ import {ancientPoetryApi} from '@/apis/ancient-poetry'
 import PaginationUnit from '@/components/Table/PaginationUnit.vue'
 import TableUnit from '@/components/Table/TableUnit.vue';
 import {useRouter, useRoute} from 'vue-router';
+import {ElMessage} from "element-plus";
 
 const route = useRoute()
 const columns = reactive([
@@ -52,10 +53,13 @@ const columns = reactive([
   },
 ])
 
+const tagOption = reactive(["古典文学", "悬疑推理", "青春文学", "科幻冒险", "心理励志", "文学经典", "历史传奇", "当代都市", "青春励志",
+  "科普知识", "经济社会", "文学艺术", "人际关系", "现代都市", "科技创新", "亲情友情", "儿童成长", "文化哲学", "社会科学", "小说散文"])
 
 let list = ref([])
 let total = ref<number>(0)
 let isShowMoreSearch = ref<boolean>(false)
+let isLoading = ref<boolean>(false)
 
 interface ParamsType {
   page: number
@@ -84,6 +88,7 @@ let params = ref<ParamsType>({
 if (query.limit) {
   params.value.title = query.title
   params.value.author = query.author
+  params.value.tag = query.category
   params.value.introduction = query.introduction
   params.value.limit = parseInt(query.limit)
   params.value.page = parseInt(query.page)
@@ -132,6 +137,21 @@ const addBook = () => {
 
 }
 
+const digBook = () => {
+  isLoading.value = true
+  ancientPoetryApi.getBookFromDouBan().then((res: any) => {
+    if (res.data.code == 200) {
+      ElMessage({
+        type: 'success',
+        message: '成功添加' + res.data.data + '本书籍',
+      })
+      isLoading.value = false
+    }
+    fetchTableData()
+  })
+
+}
+
 </script>
 <template>
   <div>
@@ -141,6 +161,10 @@ const addBook = () => {
         <div class="button-box">
           <el-button type="primary" @click="handleSearch" icon="Search">查询</el-button>
           <el-button type="primary" @click="reSearch" plain icon="RefreshLeft">重置</el-button>
+          <el-button type="primary" :disabled="isLoading" @click="digBook" plain icon="Upload">
+              <span v-if="isLoading">加载中...</span>
+              <span v-else>自动爬取</span>
+          </el-button>
           <el-button @click="addBook" plain icon="Plus">新增</el-button>
         </div>
       </div>
@@ -155,6 +179,12 @@ const addBook = () => {
           <el-form-item label="书籍内容:">
             <el-input placeholder="请输入内容关键字" clearable @keydown.enter="handleSearch"
                       v-model="params.introduction"></el-input>
+          </el-form-item>
+          <el-form-item label="书籍标签:">
+            <el-select clearable v-model="params.tag">
+              <el-option v-for="(item, index) in tagOption" :label="item" :value="item"
+                         :key="index + 'tag'"></el-option>
+            </el-select>
           </el-form-item>
         </el-form>
       </div>

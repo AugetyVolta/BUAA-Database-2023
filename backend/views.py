@@ -171,6 +171,7 @@ def dig_book(request):
             book_data = dig_books()
             books_to_create = [Book(**data) for data in book_data]
             Book.objects.bulk_create(books_to_create)
+            res['data'] = len(book_data)
             res["code"] = 200
             res["message"] = "success"
             print('-------------------dig_book-------------------')
@@ -213,9 +214,7 @@ def get_bookDetailList(request):
     try:
         start_position = (int(request.GET.get('page')) - 1) * 10
         count_to_fetch = int(request.GET.get('limit'))
-        print(request.GET.get('title') + "1")
-        print(request.GET.get('author') + "2")
-        print(request.GET.get('introduction') + "3")
+        tag = request.GET.get('tag')
         books = Book.objects.filter(name__icontains=request.GET.get('title'),
                                     author__icontains=request.GET.get('author'),
                                     description__icontains=request.GET.get('introduction')).order_by("id")[
@@ -226,19 +225,20 @@ def get_bookDetailList(request):
                                            description__icontains=request.GET.get('introduction')).count()
         data_item = {"id": 0, "title": "", "author": "", "introduction": "", "score": 0.0, "liked_times": 0, "tag": ""}
         for book in books:
-            data_item['id'] = book.id
-            data_item['title'] = book.name
-            data_item['author'] = book.author
-            data_item['introduction'] = book.description
-            data_item['score'] = '%.1f' % Score.objects.filter(book_id=book.id).aggregate(
-                Avg('score')).get(
-                'score__avg') if Score.objects.filter(book_id=book.id) else 0
-            data_item['liked_times'] = Favourite.objects.filter(book=book).count()
             data_item['tag'] = ""
             bookLabelRelations = BookLabelRelation.objects.filter(book=book)
             for bookLabelRelation in bookLabelRelations:
                 data_item['tag'] += bookLabelRelation.label.content + " "
-            res['data'].append(data_item)
+            if tag in data_item['tag']:
+                data_item['id'] = book.id
+                data_item['title'] = book.name
+                data_item['author'] = book.author
+                data_item['introduction'] = book.description
+                data_item['score'] = '%.1f' % Score.objects.filter(book_id=book.id).aggregate(
+                    Avg('score')).get(
+                    'score__avg') if Score.objects.filter(book_id=book.id) else 0
+                data_item['liked_times'] = Favourite.objects.filter(book=book).count()
+                res['data'].append(data_item)
             data_item = {"id": 0, "title": "", "author": "", "introduction": "", "score": 0.0, "liked_times": 0,
                          "tag": ""}
         res["code"] = 200
@@ -261,7 +261,8 @@ def get_bookInfo(request):
         data['title'] = book['name']
         data['author'] = book['author']
         # 是否被收藏
-        data['isBookFavorite'] = True if Favourite.objects.filter(user=user, book=Book.objects.filter(id=request.GET.get('id')).first()) else False
+        data['isBookFavorite'] = True if Favourite.objects.filter(user=user, book=Book.objects.filter(
+            id=request.GET.get('id')).first()) else False
         # 平均打分
         data['average_score'] = '%.1f' % Score.objects.filter(book_id=request.GET.get('id')).aggregate(
             Avg('score')).get(
