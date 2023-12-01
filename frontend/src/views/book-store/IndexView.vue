@@ -265,7 +265,7 @@ const delRow = (value: any) => {
           <el-form-item label="添加时间:">
             <el-date-picker clearable v-model="searchDate" :shortcuts="pickerOptions.shortcuts"
               :disabled-date="pickerOptions.disabledDate" type="datetimerange" range-separator="至"
-              value-format="YYYY-MM-DD hh:mm:ss" start-placeholder="开始日期" end-placeholder="结束日期">
+              value-format="YYYY-MM-DD HH:mm:ss" start-placeholder="开始日期" end-placeholder="结束日期">
             </el-date-picker>
           </el-form-item>
         </el-form>
