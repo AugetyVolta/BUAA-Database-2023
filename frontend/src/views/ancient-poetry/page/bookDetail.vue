@@ -9,6 +9,7 @@ import {register} from "@/apis/users";
 const router = useRouter()
 const route = useRoute()
 const localUserData = localStorage.getItem("user_data")
+
 const ancientBookData = ref({
   title: "",
   introduce: "",    //简介
@@ -19,14 +20,7 @@ const ancientBookData = ref({
   average_score: 0.0,
   isBookFavorite: false, // 添加这个属性来表示书籍是否已经收藏
 })
-const getAncientPoetryDetail = async () => {
-  const {data} = await ancientBooksApi.getAncientBooksInfo(route.query.id)
-  ancientBookData.value = data.data
-}
-getAncientPoetryDetail()
-const goIndex = () => {
-  router.push({path: '/ancient/books'})
-}
+
 // const scrollToElement = (index: number) => {
 //   const element: HTMLElement | null = document.getElementById("book" + index);
 //   if (element) {
@@ -49,8 +43,16 @@ const userForm = reactive<userType>({
   gender: "",
   id: 0
 })
-
 const userData = ref(localUserData && localUserData !== 'undefined' ? JSON.parse(localUserData as string) : userForm)
+
+const getAncientPoetryDetail = async () => {
+  const {data} = await ancientBooksApi.getAncientBooksInfo({"id": route.query.id, "user_id": userData.value.id})
+  ancientBookData.value = data.data
+}
+getAncientPoetryDetail()
+const goIndex = () => {
+  router.push({path: '/ancient/books'})
+}
 
 const newReviewFormRef = ref(null);
 let addReviewDialogVisible = ref<boolean>(false);

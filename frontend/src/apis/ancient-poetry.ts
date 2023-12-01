@@ -2,12 +2,16 @@ import request from "@/utils/request";
 import axios from "axios";
 
 export const ancientPoetryApi = {
-    getAncientPoetryList(params = {}) {
-        return request({
-            url: `/ancient/poetry`,
-            method: "get",
-            params,
-        });
+    getAncientPoetryList(params) {
+        return axios.get('/api/get_bookDetailList', {
+            params: {
+                page: params.page,
+                limit: params.limit,
+                title: params.title,
+                author: params.author,
+                introduction: params.introduction,
+            }
+        })
     },
     getAncientPoetryInfo(id) {
         return request({
@@ -15,19 +19,6 @@ export const ancientPoetryApi = {
             method: "get",
         });
     },
-    getFamousList(params = {}) {
-        return request({
-            url: `/ancient/famous`,
-            method: "get",
-            params,
-        })
-    },
-    getFamousInfo(id) {
-        return request({
-            url: `/ancient/famous/${id}`,
-            method: "get",
-        })
-    }
 }
 export const ancientBooksApi = {
     getAncientBooksList(param) {
@@ -40,8 +31,8 @@ export const ancientBooksApi = {
                 }
         })
     },
-    getAncientBooksInfo(id) {
-        return axios.get(`/api/get_bookInfo?id=${id}`)
+    getAncientBooksInfo(params) {
+        return axios.get(`/api/get_bookInfo?id=${params['id']}&user_id=${params['user_id']}`)
     },
     addNewReview(params = {}) {
         return axios.post(`/api/add_bookComment`, params)

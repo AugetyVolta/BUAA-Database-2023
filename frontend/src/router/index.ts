@@ -102,26 +102,6 @@ const routes: Array<RouteRecordRaw> = [
             component: () => import('@/views/ancient-poetry/page/poetryDetail.vue'),
           },
           {
-            path: '/ancient/famous',
-            name: 'FamousView',
-            meta: {
-              title: "古籍名句",
-              icon: "MagicStick"
-            },
-            component: () => import('@/views/ancient-poetry/FamousView.vue'),
-          },
-          {
-            path: '/ancient/famous/detail',
-            name: 'famousDetail',
-            meta: {
-              title: "名句集",
-              parent: "古籍名句",
-              parentPath: "/ancient/famous",
-              hidden
-            },
-            component: () => import('@/views/ancient-poetry/page/famousDetail.vue'),
-          },
-          {
             path: '/ancient/books',
             name: 'ancientBooks',
             meta: {

@@ -208,16 +208,60 @@ def getBookList(request):
     return JsonResponse(res)
 
 
+def get_bookDetailList(request):
+    res = {"code": 400, "message": "", "data": None, "total": 0}
+    try:
+        start_position = (int(request.GET.get('page')) - 1) * 10
+        count_to_fetch = int(request.GET.get('limit'))
+        print(request.GET.get('title') + "1")
+        print(request.GET.get('author') + "2")
+        print(request.GET.get('introduction') + "3")
+        books = Book.objects.filter(name__icontains=request.GET.get('title'),
+                                    author__icontains=request.GET.get('author'),
+                                    description__icontains=request.GET.get('introduction')).order_by("id")[
+                start_position:start_position + count_to_fetch]
+        res['data'] = []
+        res['total'] = Book.objects.filter(name__icontains=request.GET.get('title'),
+                                           author__icontains=request.GET.get('author'),
+                                           description__icontains=request.GET.get('introduction')).count()
+        data_item = {"id": 0, "title": "", "author": "", "introduction": "", "score": 0.0, "liked_times": 0, "tag": ""}
+        for book in books:
+            data_item['id'] = book.id
+            data_item['title'] = book.name
+            data_item['author'] = book.author
+            data_item['introduction'] = book.description
+            data_item['score'] = '%.1f' % Score.objects.filter(book_id=book.id).aggregate(
+                Avg('score')).get(
+                'score__avg') if Score.objects.filter(book_id=book.id) else 0
+            data_item['liked_times'] = Favourite.objects.filter(book=book).count()
+            data_item['tag'] = ""
+            bookLabelRelations = BookLabelRelation.objects.filter(book=book)
+            for bookLabelRelation in bookLabelRelations:
+                data_item['tag'] += bookLabelRelation.label.content + " "
+            res['data'].append(data_item)
+            data_item = {"id": 0, "title": "", "author": "", "introduction": "", "score": 0.0, "liked_times": 0,
+                         "tag": ""}
+        res["code"] = 200
+        res["message"] = "success"
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误：" + str(e)
+    return JsonResponse(res)
+
+
 def get_bookInfo(request):
     res = {"code": 400, "message": "", "data": None}
     try:
         data = {"content": [], "pic_url": "", "title": "", "author": "", "introduce": "", 'label': [],
-                "average_score": 0.0}
+                "average_score": 0.0, "isBookFavorite": False}
         book = Book.objects.filter(id=request.GET.get('id')).values().first()
+        user = User.objects.filter(id=request.GET.get('user_id')).first()
         data['introduce'] = book['description']
         data['pic_url'] = book['pic_url']
         data['title'] = book['name']
         data['author'] = book['author']
+        # 是否被收藏
+        data['isBookFavorite'] = True if Favourite.objects.filter(user=user, book=Book.objects.filter(id=request.GET.get('id')).first()) else False
         # 平均打分
         data['average_score'] = '%.1f' % Score.objects.filter(book_id=request.GET.get('id')).aggregate(
             Avg('score')).get(
@@ -505,7 +549,8 @@ def add_tip(request):
             community = Community.objects.get(id=data.get('community_id'))
             # 获得发帖用户
             user = User.objects.get(id=data.get('user_id'))
-            tip = Tip(content=data.get('content'),
+            tip = Tip(title=data.get('title'),
+                      content=data.get('content'),
                       community=community,
                       user=user)
             tip.save()
@@ -517,6 +562,36 @@ def add_tip(request):
             res["message"] = "服务器错误：创建帖子失败" + str(e)
     else:
         res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+# 获取帖子内容
+def get_tipList(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        res['data'] = []
+        community = Community.objects.get(id=request.GET.get('id'))
+        date_item = {"id": "", "title": "", "author": "", "content": "", "supported": 0, "unsupported": 0,
+                     "commentNum": 0, "postTime": ""}
+        tips = Tip.objects.filter(community=community).order_by('id')
+        for tip in tips:
+            date_item['id'] = tip.id
+            date_item['title'] = tip.title
+            date_item['author'] = tip.user.nickname
+            date_item['content'] = tip.content
+            date_item['supported'] = tip.support_times
+            date_item['unsupported'] = tip.unsupported_times
+            time = str(tip.create_time)
+            date_item['postTime'] = time.split('.')[0]
+            date_item['commentNum'] = Comment.objects.filter(tip=tip).count()
+            res['data'].append(date_item)
+            date_item = {"id": "", "title": "", "author": "", "content": "", "supported": 0, "unsupported": 0,
+                         "commentNum": 0, "postTime": ""}
+        res["code"] = 200
+        res["message"] = "success"
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误：" + str(e)
     return JsonResponse(res)
 
 

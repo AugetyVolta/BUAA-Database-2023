@@ -10,6 +10,7 @@ urlpatterns = [
     path('modify_userdata', views.modify_user),
     path('get_bookInfo', views.get_bookInfo),
     path('get_books', views.getBookList),
+    path('get_bookDetailList',views.get_bookDetailList),
     path('add_book', views.add_book),
     path('dig_book', views.dig_book),
     path('add_favourite', views.add_favourite),
@@ -21,6 +22,7 @@ urlpatterns = [
     path('get_communities', views.get_communityList),
     path('check_community', views.check_community),
     path('add_tip', views.add_tip),
+    path('get_tipList', views.get_tipList),
     path('add_comment', views.add_comment),
     path('add_label', views.add_label),
 
