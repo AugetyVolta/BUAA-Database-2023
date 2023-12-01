@@ -433,7 +433,7 @@ def delete_community(request):
 
 # 获得圈子，带查找
 def get_communityList(request):
-    res = {"code": 400, "message": "", "data": None}
+    res = {"code": 400, "message": "", "data": None, "total": 0}
     try:
         res['data'] = []
         start_time = request.GET.get('startTime')
@@ -444,11 +444,16 @@ def get_communityList(request):
             communities = Community.objects.filter(title__icontains=request.GET.get('name'),
                                                    topic__icontains=request.GET.get('introduction')).order_by('id')[
                           start_position:start_position + count_to_fetch]
+            res['total'] = Community.objects.filter(title__icontains=request.GET.get('name'),
+                                                    topic__icontains=request.GET.get('introduction')).count()
         else:
             communities = Community.objects.filter(title__icontains=request.GET.get('name'),
                                                    topic__icontains=request.GET.get('introduction'),
                                                    create_time__range=(start_time, end_time)).order_by('id')[
                           start_position:start_position + count_to_fetch]
+            res['total'] = Community.objects.filter(title__icontains=request.GET.get('name'),
+                                                    topic__icontains=request.GET.get('introduction'),
+                                                    create_time__range=(start_time, end_time)).count()
         data_item = {"name": "", 'introduction': "", 'add_date': ""}
         for community in communities:
             data_item['name'] = community.title
