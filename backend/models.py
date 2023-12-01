@@ -25,7 +25,7 @@ class Book(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(verbose_name="书名", max_length=50, blank=False)
     author = models.CharField(verbose_name="作者", max_length=50, blank=False)
-    description = models.TextField(verbose_name="内容介绍", default="该书暂时没有介绍", blank=True)
+    description = models.TextField(verbose_name="内容介绍", default="该书暂时没有介绍", blank=True, null=True)
     pic_url = models.CharField(verbose_name="图片路径", max_length=250, blank=False, default="")
 
 

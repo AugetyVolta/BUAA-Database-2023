@@ -22,12 +22,14 @@ let list = ref([])
 let total = ref(0)
 let isGetMore = ref(true)
 const getAncientBooksList = () => {
+  //直接不循环显示
+  isGetMore.value = false
   if (total.value > 0 && params.value.page * params.value.limit > 60) {
     ElMessage.success("古籍数据已全部获取完毕")
     isGetMore.value = false
     return
   }
-  ancientBooksApi.getAncientBooksList(params.value.name).then((res: any) => {
+  ancientBooksApi.getAncientBooksList(params.value).then((res: any) => {
     //res.data才是需要的数据
     list.value = list.value.concat(res.data.data)
     total.value = res.data.total
@@ -40,6 +42,7 @@ const handleSearch = () => {
 }
 
 const loadingMoreData = () => {
+  console.log("hhhhhhh " + isGetMore.value)
   if (!isGetMore.value) {
     return
   }
@@ -57,7 +60,7 @@ const goBookDetail = (id: number) => {
         <h4 class="layout-title">古籍学习</h4>
         <div class="search">
           <el-input clearable @keydown.enter="handleSearch" @clear="handleSearch" size="large" v-model="params.name"
-                    placeholder="请输入古籍名称">
+                    placeholder="请输入书籍名称">
             <template #append>
               <el-button icon="Search" @click="handleSearch"/>
             </template>
@@ -78,7 +81,8 @@ const goBookDetail = (id: number) => {
                   {{ item.description }}
                 </div>
               </template>
-              <img @click.stop="goBookDetail(item.id)" :src="item.pic_url" :alt="item.name" class="image"/>
+              <img @click.stop="goBookDetail(item.id)" :src="item.pic_url" referrerPolicy="no-referrer" :alt="item.name"
+                   class="image"/>
             </el-tooltip>
           </div>
         </el-col>

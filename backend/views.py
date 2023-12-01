@@ -6,6 +6,8 @@ import json
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 from rest_framework import generics
+
+from backend.DigBooks import dig_books
 from backend.models import Book, Community, User, Photo, Favourite, Score, BookComment, UserBookRelation, Tip, Label, \
     BookLabelRelation, OwnedCommunity, Comment
 from django.core import serializers
@@ -161,12 +163,34 @@ def add_book(request):
     return JsonResponse(res)
 
 
-def getBookList(request):
+# 挖掘书籍并添加
+def dig_book(request):
     res = {"code": 400, "message": "", "data": None}
+    if request.method == "POST":
+        try:
+            book_data = dig_books()
+            books_to_create = [Book(**data) for data in book_data]
+            Book.objects.bulk_create(books_to_create)
+            res["code"] = 200
+            res["message"] = "success"
+            print('-------------------dig_book-------------------')
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：书籍爬取失败" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+def getBookList(request):
+    res = {"code": 400, "message": "", "data": None, "total": 0}
     try:
         book_name = request.GET.get('name')
+        # start_position = (int(request.GET.get('page')) - 1) * 10
+        # count_to_fetch = int(request.GET.get('limit'))
         books = Book.objects.filter(name__icontains=book_name).order_by("id")
         res['data'] = []
+        res['total'] = Book.objects.filter(name__icontains=book_name).count()
         data_item = {"id": 0, "name": "", "pic_url": "", "description": ""}
         for book in books:
             data_item['id'] = book.id
@@ -454,14 +478,15 @@ def get_communityList(request):
             res['total'] = Community.objects.filter(title__icontains=request.GET.get('name'),
                                                     topic__icontains=request.GET.get('introduction'),
                                                     create_time__range=(start_time, end_time)).count()
-        data_item = {"name": "", 'introduction': "", 'add_date': ""}
+        data_item = {"id": 0, "name": "", 'introduction': "", 'add_date': ""}
         for community in communities:
+            data_item['id'] = community.id
             data_item['name'] = community.title
             data_item['introduction'] = community.topic
             time = str(community.create_time)
             data_item['add_date'] = time.split('.')[0]
             res['data'].append(data_item)
-            data_item = {"name": "", 'introduction': "", 'add_date': ""}
+            data_item = {"id": 0, "name": "", 'introduction': "", 'add_date': ""}
         res["code"] = 200
         res["message"] = "success"
     except Exception as e:

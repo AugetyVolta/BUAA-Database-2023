@@ -11,6 +11,7 @@ urlpatterns = [
     path('get_bookInfo', views.get_bookInfo),
     path('get_books', views.getBookList),
     path('add_book', views.add_book),
+    path('dig_book', views.dig_book),
     path('add_favourite', views.add_favourite),
     path('remove_favourite', views.remove_favourite),
     path('add_score', views.add_score),
