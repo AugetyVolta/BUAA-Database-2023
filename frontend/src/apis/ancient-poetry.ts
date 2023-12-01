@@ -30,11 +30,13 @@ export const ancientPoetryApi = {
     }
 }
 export const ancientBooksApi = {
-    getAncientBooksList(name) {
+    getAncientBooksList(param) {
         return axios.get('/api/get_books', {
             params:
                 {
-                    "name": name
+                    "name": param.name,
+                    "page": param.page,
+                    "limit": param.limit
                 }
         })
     },

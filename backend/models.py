@@ -25,7 +25,7 @@ class Book(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(verbose_name="书名", max_length=50, blank=False)
     author = models.CharField(verbose_name="作者", max_length=50, blank=False)
-    description = models.TextField(verbose_name="内容介绍", default="该书暂时没有介绍", blank=True)
+    description = models.TextField(verbose_name="内容介绍", default="该书暂时没有介绍", blank=True, null=True)
     pic_url = models.CharField(verbose_name="图片路径", max_length=250, blank=False, default="")
 
 
@@ -51,8 +51,6 @@ class BookComment(models.Model):
     id = models.AutoField(primary_key=True)
     content = models.TextField(verbose_name="内容", blank=False)
     create_time = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
-    support_times = models.IntegerField(verbose_name="点赞数", default=0)
-    unsupported_times = models.IntegerField(verbose_name="反对数", default=0)
     # 外键
     commented_book = models.ForeignKey(Book, on_delete=models.CASCADE)  # 书本被删除时,书评也会被删除
 
@@ -85,7 +83,10 @@ class OwnedCommunity(models.Model):
 class Tip(models.Model):
     id = models.AutoField(primary_key=True)
     create_time = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    title = models.TextField(verbose_name="标题", blank=False, default="")
     content = models.TextField(verbose_name="内容", blank=False)
+    support_times = models.IntegerField(verbose_name="点赞数", default=0)
+    unsupported_times = models.IntegerField(verbose_name="反对数", default=0)
     # 外键
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)

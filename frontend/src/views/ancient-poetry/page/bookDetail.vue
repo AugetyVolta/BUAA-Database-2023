@@ -141,7 +141,7 @@ const removeFromFavorites = () => {
       <el-card :body-style="{ padding: '10px' }" style="margin-bottom: 45px;">
         <div class="conent-head">
           <div class="image">
-            <img :src="ancientBookData.pic_url"/>
+            <img :src="ancientBookData.pic_url" referrerPolicy="no-referrer"/>
           </div>
           <div class="bottom">
             <p class="author">{{ "作者：" + ancientBookData.author }}</p>
