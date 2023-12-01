@@ -46,7 +46,15 @@ export const booksApi = {
 
   checkQuanzi(name) {
     return axios.get(`/api/check_community?title=${name}`);
-  }
+  },
+
+  getTipInfo(id) {
+    return axios.get(`/api/get_tipList?id=${id}`);
+  },
+
+  addNewPost(data = {}) {
+    return axios.post("/api/add_tip", data)
+  },
 
 }
 // 借书管理

@@ -1,12 +1,32 @@
+
+
+
 <template>
   <div>
-       <div class="zhihu-item-class" v-for="(item,index) in posts">
+    <el-button type="text" @click="dialog = true">发起帖子</el-button>
+    <el-dialog top="3%" v-model="dialog" title="创建帖子" width="50%">
+        <el-form :model="newPostForm" :rules="rules" ref="ruleFormRef" class="demo-ruleForm" label-width="120px">
+          <el-form-item prop="title" label="帖子标题：">
+            <el-input size="large" v-model="newPostForm.title" autocomplete="off"/>
+          </el-form-item>
+          <el-form-item prop="content" label="帖子内容：">
+            <el-input size="large" v-model="newPostForm.content" autocomplete="off"/>
+          </el-form-item>
+        </el-form>
+          <div class="demo-drawer__footer">
+            <el-button size="large" @click="dialog = false">退 出</el-button>
+            <el-button size="large" type="primary" @click="onFinish(ruleFormRef)">
+              提 交
+            </el-button>
+          </div>
+
+      </el-dialog>
+       <div class="zhihu-item-class" v-for="(item) in list">
       <el-row>
-        <h3 style="float: left;margin-left: 10px" @click="intoPost(item.post_id )">{{item.post_name}}</h3>
+        <h3 style="float: left;margin-left: 10px" @click="intoPost(item.post_id)">{{item.post_name}}</h3>
       </el-row>
       <el-row style="margin-top: 10px;padding: 10px">
-        <el-col :span="3">
-        </el-col>
+        <el-col :span="3"></el-col>
         <el-col :span="15">
         <!-- <folder >Dr.粲: 赵慧婵是我同班同学,下午热搜第二的时候班级群久违的热闹了起来。说起来我了解的我们班在清华/中科院系统中已经有三位博导了,都是30岁左右从国外被引进的,而赵慧婵无疑是其中最优秀的一位。其实我个…</folder> -->
         <el-collapse >
@@ -14,18 +34,16 @@
             <div>{{item.content}}</div>
           </el-collapse-item>
         </el-collapse>
-
         </el-col>
       </el-row>
       <el-row style="padding: 0;margin: 0">
         <el-col :span="6">
-          <el-button style="color: #0084ff;background-color: rgba(0,132,255,.1);"><i class="el-icon-caret-top"></i>赞同 {{item.likes_num}}</el-button>
+          <el-button style="color: #0084ff;background-color: rgba(0,132,255,.1);"><i class="el-icon-caret-top"></i>赞同 {{item.supported}}</el-button>
           <el-button icon="el-icon-caret-bottom" style="color: #0084ff;background-color: rgba(0,132,255,.1);"></el-button>
         </el-col>
         <el-row>
           <el-col :span="3" style="">
-
-            <el-button type="text" style="color: #999999;"><i class="el-icon-message"></i>{{item.comment_num}} 条评论</el-button>
+            <el-button type="text" style="color: #999999;"><i class="el-icon-message"></i>{{item.commentNum}} 条评论</el-button>
           </el-col>
           <el-col :span="2" style=""> <el-button type="text" style="color: #999999;"><i class="el-icon-share"></i>分享</el-button>
           </el-col>
@@ -43,9 +61,7 @@
                 <el-dropdown-item>举报</el-dropdown-item>
                 <el-dropdown-item>不感兴趣</el-dropdown-item>
               </el-dropdown-menu>
-
             </el-dropdown>
-
           </el-col>
           <el-col :span="3" style="">
             <el-button type="danger" icon="el-icon-delete" circle size="small" @click="userDeletePost(item.post_id)"></el-button>
@@ -59,19 +75,77 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import {ref, onMounted, reactive} from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { booksApi} from '@/apis/book-store'
-import {ancientPoetryApi} from "@/apis/ancient-poetry";
+import {ElMessage, FormInstance, FormRules} from "element-plus";
 const router = useRouter()
 const route = useRoute()
+const dialog = ref(false)
+const localUserData = localStorage.getItem("user_data")
+interface userType {
+  account: string,
+  nickname: string,
+  age: null | number,
+  gender: string,
+  id: number
+}
+
+const userForm = reactive<userType>({
+  account: "",
+  nickname: "",
+  age: null,
+  gender: "",
+  id: 0
+})
+
+const userData = ref(localUserData && localUserData !== 'undefined' ? JSON.parse(localUserData as string) : userForm)
+
+interface newPostType {
+  title: string,
+  content:string,
+  user_id: number,
+  community_id: number
+}
+
+const newPostForm = reactive<newPostType>({
+  title: "",
+  content: "",
+  user_id: userData.value.id,
+  community_id: Number(route.query.id)
+})
+
+const rules = reactive<FormRules<typeof newPostForm>>({
+  title: [
+    {required: true, message: "帖子标题不能为空", trigger: "blur"}
+  ],
+  content: [{required: true, message: "帖子内容不能为空", trigger: "blur"}]
+})
+
+const ruleFormRef = ref()
+const onFinish = async (formEl: FormInstance | undefined) => {
+  if (!formEl) return
+  await formEl.validate((valid, fields) => {
+    if (valid) {
+      booksApi.addNewPost(newPostForm).then((res: any) => {
+        if (res.data.code == 200) {
+          ElMessage.success("提交成功，待审核")
+          dialog.value = false
+        }
+      })
+    }
+  })
+}
+
 let list = ref([])
+
+
+
 const tipData = ref({
   id: "",           //帖子id
   title: "",        //帖子名称
   author: "",       //发帖者
   content: "",      //帖子内容
-  comment: [],      //评论
   supported : 0,    //赞同数
   unsupported: 0,   //反对数
   commentNum: 0,    //评论数
@@ -79,8 +153,8 @@ const tipData = ref({
 })
 const getTip = async () => {
   const { data } = await booksApi.getTipInfo(route.query.id)
-  list.value = data
-  //tipData.value = data
+  console.log(data.data)
+  list.value = data.data
 }
 getTip()
 const posts = ref([
@@ -118,7 +192,7 @@ const getTime = () => {
   const hh = now.getHours().toString().padStart(2, '0');
   const mf = now.getMinutes().toString().padStart(2, '0');
   const ss = now.getSeconds().toString().padStart(2, '0');
-  gettime.value = `${yy}-${mm}-${dd} ${hh}:${mf}:${ss}`;
+  //gettime.value = `${yy}-${mm}-${dd} ${hh}:${mf}:${ss}`;
 };
 
 const currentTime = () => {
@@ -126,33 +200,33 @@ const currentTime = () => {
 };
 
 const userAddTagToGroup = () => {
-  console.log(usertag.value);
+  //console.log(usertag.value);
   // API call to add tag to group
 };
 
 const userCreatePost = (done) => {
-  if (loading.value) {
-    return;
-  }
+  //if (loading.value) {
+  //  return;
+  //}
   // Confirmation dialog
-  confirm('确定要提交表单吗？').then((result) => {
-    if (result) {
-      loading.value = true;
-      timer.value = setTimeout(() => {
+  //confirm('确定要提交表单吗？').then((result) => {
+    //if (result) {
+      //loading.value = true;
+      //timer.value = setTimeout(() => {
         // Simulating API call to create a post
-        clearTimeout(timer.value);
-        loading.value = false;
-        done();
-        console.log('Post created!');
-      }, 2000);
-    }
-  });
+        //clearTimeout(timer.value);
+        //loading.value = false;
+        //done();
+        //console.log('Post created!');
+      //}, 2000);
+    //}
+  //});
 };
 
 const cancelForm = () => {
-  loading.value = false;
-  dialog.value = false;
-  clearTimeout(timer.value);
+  //loading.value = false;
+  //dialog.value = false;
+  //clearTimeout(timer.value);
 };
 
 const intoPost = (id) => {
