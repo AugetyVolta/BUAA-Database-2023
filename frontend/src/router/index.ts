@@ -50,6 +50,17 @@ const routes: Array<RouteRecordRaw> = [
             component: () => import('@/views/book-store/IndexView.vue')
           },
           {
+            path: '/book-store/books/tips',
+            name: 'tipsDetail',
+            meta: {
+              title: "相关帖子",
+              parent: "书籍管理",
+              parentPath: "/book-store/books/",
+              hidden
+            },
+            component: () => import('@/views/book-store/page/tipDetail.vue'),
+          },
+          {
             path: '/book-store/borrow-books',
             name: 'BorrowBooks',
             meta: {

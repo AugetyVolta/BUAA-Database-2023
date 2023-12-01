@@ -8,7 +8,6 @@ import { booksApi } from '@/apis/book-store'
 import PaginationUnit from '@/components/Table/PaginationUnit.vue'
 import TableUnit from '@/components/Table/TableUnit.vue'
 import { useRouter, useRoute } from 'vue-router';
-import {checkUserAccount, register} from "@/apis/users";
 const route = useRoute()
 const localUserData = localStorage.getItem("user_data")
 interface userType {
@@ -194,7 +193,8 @@ const addTask = () => {
 
 const router = useRouter()
 const linkFun = (value: any) => {
-  router.push({ path: "/ancient/poetry/detail", query: { id: value.id, name: value.title, ...params.value } })
+  console.log(value)
+  router.push({ path: "/book-store/books/tips", query: { id: value.id, name: value.title, ...params.value } })
 }
 
 
@@ -265,7 +265,7 @@ const delRow = (value: any) => {
           <el-form-item label="添加时间:">
             <el-date-picker clearable v-model="searchDate" :shortcuts="pickerOptions.shortcuts"
               :disabled-date="pickerOptions.disabledDate" type="datetimerange" range-separator="至"
-              value-format="YYYY-MM-DD hh:mm:ss" start-placeholder="开始日期" end-placeholder="结束日期">
+              value-format="YYYY-MM-DD HH:mm:ss" start-placeholder="开始日期" end-placeholder="结束日期">
             </el-date-picker>
           </el-form-item>
         </el-form>
