@@ -1,19 +1,31 @@
 import request from "@/utils/request";
+import axios from "axios";
 // 书籍管理
 export const booksApi = {
-  getBooksList(params = {}) {
-    return request({
-      url: `/book/books-list`,
-      method: "get",
-      params,
+  getBooksList(params) {
+    // return request({
+    //   url: `/book/books-list`,
+    //   method: "get",
+    //   params,
+    // });
+    return axios.get(`/api/get_communities`, {
+        params :{
+          "page": params.page,
+          "limit": params.limit,
+          "name": params.name,
+          "introduction": params.introduction,
+          "startTime": params.startTime,
+          "endTime": params.endTime
+        }
     });
   },
   addBook(data) {
-    return request({
-      url: `/book/books/create`,
-      method: "post",
-      data
-    });
+    // return request({
+    //   url: `/book/books/create`,
+    //   method: "post",
+    //   data
+    // });
+    return axios.post(`/api/add_community`, data);
   },
   getBookInfo(id) {
     return request({
@@ -28,12 +40,13 @@ export const booksApi = {
       data
     });
   },
-  deleteBookInfo(id) {
-    return request({
-      url: `/book/books/${id}`,
-      method: "delete",
-    });
+  deleteBookInfo(params:{}) {
+    return axios.post(`/api/delete_community`,params)
   },
+
+  checkQuanzi(name) {
+    return axios.get(`/api/check_community?title=${name}`);
+  }
 
 }
 // 借书管理
