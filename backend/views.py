@@ -1,5 +1,4 @@
-import datetime
-
+from datetime import datetime
 import jwt
 from django.db.models import Avg
 from django.http import HttpResponse, JsonResponse
@@ -166,11 +165,7 @@ def getBookList(request):
     res = {"code": 400, "message": "", "data": None}
     try:
         book_name = request.GET.get('name')
-        if book_name == '':
-            books = Book.objects.all().order_by("id")
-        else:
-            # 模糊搜索
-            books = Book.objects.filter(name__icontains=book_name).order_by("id")
+        books = Book.objects.filter(name__icontains=book_name).order_by("id")
         res['data'] = []
         data_item = {"id": 0, "name": "", "pic_url": "", "description": ""}
         for book in books:
@@ -348,6 +343,23 @@ def add_bookComment(request):
     return JsonResponse(res)
 
 
+# 检查圈子是否存在
+def check_community(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        title = request.GET.get("title")
+        data = Community.objects.filter(title=title).values().first()
+        if not data:
+            res['message'] = '圈子名可用'
+            res['code'] = 200
+        else:
+            res['message'] = "圈子已被创建，请重新输入"
+    except Exception as e:
+        res['message'] = '服务器错误：' + str(e)
+        res['code'] = 500
+    return JsonResponse(res)
+
+
 # 创建圈子
 def add_community(request):
     res = {"code": 400, "message": "", "data": None}
@@ -355,10 +367,13 @@ def add_community(request):
         try:
             data = json.loads(request.body)
             community = Community(
-                tilte=data.get('title'),
-                topic=data.get('topic'))
+                title=data.get('name'),
+                topic=data.get('introduction'))
             community.save()
             # 加入到用户拥有圈子表中
+            print(data.get('user_id'))
+            print(data.get('name'))
+            print(data.get('introduction'))
             user = User.objects.get(id=data.get('user_id'))
             ownedCommunity = OwnedCommunity(user=user,
                                             community=community)
@@ -371,6 +386,82 @@ def add_community(request):
             res["message"] = "服务器错误：创建圈子失败" + str(e)
     else:
         res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+def delete_community(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            community = Community.objects.get(title=data.get('name'))
+            user = User.objects.get(id=data.get("user_id"))
+            ownedCommunity = OwnedCommunity.objects.filter(user=user, community=community)
+            if ownedCommunity:
+                community.delete()
+                res["code"] = 200
+                res["message"] = "success"
+            else:
+                res["code"] = 400
+                res["message"] = "fail"
+            print('-------------------add_community-------------------')
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：删除圈子失败" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+# 获得圈子
+# def get_community(request):
+#     res = {"code": 400, "message": "", "data": None}
+#     try:
+#         data = {"name": "", 'introduction': "", "tag": [], 'add_date': ""}
+#         community = Community.objects.get(id=request.GET.get('community_id'))
+#         data['name'] = community.title
+#         data['introduction'] = community.topic
+#         data['add_date'] = community.create_time
+#         data['tag'] = ["dadads", "fdsfsdf"]
+#         res["code"] = 200
+#         res["message"] = "success"
+#         res['data'] = data
+#     except Exception as e:
+#         res["code"] = 500
+#         res["message"] = "服务器错误：" + str(e)
+#     return JsonResponse(res)
+
+# 获得圈子，带查找
+def get_communityList(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        res['data'] = []
+        start_time = request.GET.get('startTime')
+        end_time = request.GET.get('endTime')
+        start_position = (int(request.GET.get('page')) - 1) * 10
+        count_to_fetch = int(request.GET.get('limit'))
+        if start_time == '':
+            communities = Community.objects.filter(title__icontains=request.GET.get('name'),
+                                                   topic__icontains=request.GET.get('introduction')).order_by('id')[
+                          start_position:start_position + count_to_fetch]
+        else:
+            communities = Community.objects.filter(title__icontains=request.GET.get('name'),
+                                                   topic__icontains=request.GET.get('introduction'),
+                                                   create_time__range=(start_time, end_time)).order_by('id')[
+                          start_position:start_position + count_to_fetch]
+        data_item = {"name": "", 'introduction': "", 'add_date': ""}
+        for community in communities:
+            data_item['name'] = community.title
+            data_item['introduction'] = community.topic
+            time = str(community.create_time)
+            data_item['add_date'] = time.split('.')[0]
+            res['data'].append(data_item)
+            data_item = {"name": "", 'introduction': "", 'add_date': ""}
+        res["code"] = 200
+        res["message"] = "success"
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误：" + str(e)
     return JsonResponse(res)
 
 
