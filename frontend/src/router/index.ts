@@ -50,7 +50,7 @@ const routes: Array<RouteRecordRaw> = [
             component: () => import('@/views/book-store/IndexView.vue')
           },
           {
-            path: '/book-store/books/tips',
+            path: '/book-store/books/communities',
             name: 'tipsDetail',
             meta: {
               title: "相关帖子",
@@ -59,6 +59,17 @@ const routes: Array<RouteRecordRaw> = [
               hidden
             },
             component: () => import('@/views/book-store/page/tipDetail.vue'),
+          },
+          {
+            path: '/book-store/books/tips',
+            name: 'commentDetail',
+            meta: {
+              title: "评论区",
+              parent: "书籍管理",
+              parentPath: "/book-store/books/",
+              hidden
+            },
+            component: () => import('@/views/book-store/page/commentDetail.vue'),
           },
           {
             path: '/book-store/borrow-books',

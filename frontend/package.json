@@ -7,11 +7,11 @@
     "build": "vue-cli-service build"
   },
   "dependencies": {
-    "@types/nprogress": "^0.2.0",
     "@types/echarts": "^4.9.18",
-    "echarts": "^5.4.3",
+    "@types/nprogress": "^0.2.0",
     "axios": "^1.4.0",
     "core-js": "^3.8.3",
+    "echarts": "^5.4.3",
     "element-plus": "^2.3.9",
     "jsencrypt": "^3.3.2",
     "nprogress": "^0.2.0",

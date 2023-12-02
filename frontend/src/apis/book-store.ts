@@ -60,6 +60,30 @@ export const booksApi = {
     },
     addBook(params) {
         return axios.post('/api/add_book', params)
+    },
+
+    addSupport(id) {
+        return axios.get(`/api/add_support?tip_id=${id}`);
+    },
+
+    addUnsupported(id) {
+        return axios.get(`/api/add_unsupported?tip_id=${id}`)
+    },
+
+    deleteTipInfo(params) {
+        return axios.post(`/api/delete_tip`, params)
+    },
+
+    getCommentInfo(id) {
+        return axios.get(`/api/get_commentList?id=${id}`)
+    },
+
+    addComment(params) {
+        return axios.post(`/api/add_comment`, params)
+    },
+
+    deleteComment(params) {
+        return axios.post(`/api/delete_comment`, params)
     }
 
 }

@@ -2,8 +2,15 @@
 
 
 <template>
+  <div class="back">
+      <el-button class="circleBtn" type="primary"
+        @click="router.push({ path: '/book-store/books', query: { ...route.query } })" plain icon="ArrowLeft" round>
+      </el-button>
+      <b>{{ quanziName }}</b>
+    </div>
   <div>
-    <el-button type="text" @click="dialog = true">发起帖子</el-button>
+    <br/>
+    <el-button type="text" @click="dialog = true" style="margin-left: 5px">发起帖子</el-button>
     <el-dialog top="3%" v-model="dialog" title="创建帖子" width="50%">
         <el-form :model="newPostForm" :rules="rules" ref="ruleFormRef" class="demo-ruleForm" label-width="120px">
           <el-form-item prop="title" label="帖子标题：">
@@ -21,64 +28,76 @@
           </div>
 
       </el-dialog>
-       <div class="zhihu-item-class" v-for="(item) in list">
+
+    <el-timeline class="hhh">
+        <el-timeline-item v-for="(item, index) in list"  :key="index" size="large"
+                          color="#0bbd87" :timestamp="item.postTime"  placement="top">
+           <div class="poetry-detail-layout">
+         <el-card class="box-card">
+            <template #header>
+               <div class="card-header">
       <el-row>
-        <h3 style="float: left;margin-left: 10px" @click="intoPost(item.post_id)">{{item.post_name}}</h3>
+        <h3 style="float: left;margin-left: 10px">{{item.title}}</h3>
       </el-row>
+                 </div>
+              </template>
       <el-row style="margin-top: 10px;padding: 10px">
-        <el-col :span="3"></el-col>
-        <el-col :span="15">
-        <!-- <folder >Dr.粲: 赵慧婵是我同班同学,下午热搜第二的时候班级群久违的热闹了起来。说起来我了解的我们班在清华/中科院系统中已经有三位博导了,都是30岁左右从国外被引进的,而赵慧婵无疑是其中最优秀的一位。其实我个…</folder> -->
-        <el-collapse >
-          <el-collapse-item title="展开">
-            <div>{{item.content}}</div>
-          </el-collapse-item>
-        </el-collapse>
+        <el-col :span="18">
+          <div v-if="item.content.length > maxLength">
+      <div v-if="!showFullContent[index]">
+          {{ item.content.substring(0, maxLength) }}...
+        <el-button round size="small" @click="toggleShowContent(index, true)">展开<el-icon style="vertical-align: middle">
+      <ArrowDown/></el-icon></el-button>
+
+        </div>
+        <div v-else>
+          {{ item.content }}
+          <el-button round size="small" @click="toggleShowContent(index, false)">收起<el-icon style="vertical-align: middle">
+      <ArrowUp/></el-icon></el-button>
+        </div>
+          </div>
+          <div v-else>{{ item.content }}</div>
         </el-col>
       </el-row>
+            <template #footer>
+              <div>
+                <div class="content">
+                <el-row><p>{{item.author}}发布于{{item.exactPostTime}}</p></el-row>
+                </div>
+                <br/>
       <el-row style="padding: 0;margin: 0">
-        <el-col :span="6">
-          <el-button style="color: #0084ff;background-color: rgba(0,132,255,.1);"><i class="el-icon-caret-top"></i>赞同 {{item.supported}}</el-button>
-          <el-button icon="el-icon-caret-bottom" style="color: #0084ff;background-color: rgba(0,132,255,.1);"></el-button>
+        <el-col :span="15">
+          <el-button style="color: #0084ff;background-color: rgba(0,132,255,.1);" @click="favor(item.id)"><el-icon style="vertical-align: middle" size="large">
+      <Caret-top/></el-icon>赞同 {{item.supported}}</el-button>
+           <el-button style="color: #0084ff;background-color: rgba(0,132,255,.1);" @click="reject(item.id)"><el-icon style="vertical-align: middle" size="large">
+      <Caret-bottom/></el-icon>反对 {{item.unsupported}}</el-button>
         </el-col>
         <el-row>
-          <el-col :span="3" style="">
-            <el-button type="text" style="color: #999999;"><i class="el-icon-message"></i>{{item.commentNum}} 条评论</el-button>
+          <el-col :span="18" style="">
+            <el-button type="text" style="color: #999999;" @click="intoPost(item.id)"><el-icon style="vertical-align: middle" size="large">
+      <ChatRound/></el-icon>{{item.commentNum}} 条评论</el-button>
           </el-col>
-          <el-col :span="2" style=""> <el-button type="text" style="color: #999999;"><i class="el-icon-share"></i>分享</el-button>
-          </el-col>
-          <el-col :span="2" style="">
-            <el-button type="text" style="color: #999999;"><i class="el-icon-star-on"></i>收藏</el-button>
-          </el-col>
-          <el-col :span="2" style="">
-            <el-button type="text" style="color: #999999;"><i class="el-icon-heavy-rain"></i>喜欢</el-button>
-          </el-col>
-          <el-col :span="2">
-            <el-dropdown  style="padding: 10px">
-              <i class="el-icon-more"></i>
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item>没有帮助</el-dropdown-item>
-                <el-dropdown-item>举报</el-dropdown-item>
-                <el-dropdown-item>不感兴趣</el-dropdown-item>
-              </el-dropdown-menu>
-            </el-dropdown>
-          </el-col>
-          <el-col :span="3" style="">
-            <el-button type="danger" icon="el-icon-delete" circle size="small" @click="userDeletePost(item.post_id)"></el-button>
+          <el-col :span="6" style="">
+             <el-button type="text" style="color: #999999;" @click="userDeletePost(item.id)"><el-icon style="vertical-align: middle" size="large">
+      <Delete/></el-icon>删除</el-button>
           </el-col>
         </el-row>
 
       </el-row>
+              </div>
+            </template>
+         </el-card>
+           </div>
+           </el-timeline-item>
+      </el-timeline>
       </div>
-
-  </div>
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, reactive} from 'vue';
+import {ref, onMounted, reactive, computed} from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { booksApi} from '@/apis/book-store'
-import {ElMessage, FormInstance, FormRules} from "element-plus";
+import {ElMessage, ElMessageBox, FormInstance, FormRules} from "element-plus";
 const router = useRouter()
 const route = useRoute()
 const dialog = ref(false)
@@ -137,10 +156,36 @@ const onFinish = async (formEl: FormInstance | undefined) => {
   })
 }
 
-let list = ref([])
+const favor = async(id: number) => {
+   booksApi.addSupport(id).then(async (res: any) => {
+     if (res.data.code == 200) {
+       const {data} = await booksApi.getTipInfo(route.query.id)
+       console.log(data.data)
+       list.value = data.data
+       quanziName.value = data.title
+     }
+   })
+}
+
+const reject = async(id: number) => {
+   booksApi.addUnsupported(id).then(async (res: any) => {
+     if (res.data.code == 200) {
+       const {data} = await booksApi.getTipInfo(route.query.id)
+       console.log(data.data)
+       list.value = data.data
+       quanziName.value = data.title
+     }
+   })
+}
 
 
-
+const list = ref([])
+const quanziName = ref("")
+const maxLength = ref(20)
+const showFullContent = ref([])
+const toggleShowContent = (index, show) => {
+  showFullContent.value[index] = show;
+};
 const tipData = ref({
   id: "",           //帖子id
   title: "",        //帖子名称
@@ -150,102 +195,66 @@ const tipData = ref({
   unsupported: 0,   //反对数
   commentNum: 0,    //评论数
   postTime: "",     //发帖时间
+  exactPostTime: "", //精确发帖时间
 })
 const getTip = async () => {
   const { data } = await booksApi.getTipInfo(route.query.id)
   console.log(data.data)
   list.value = data.data
+  quanziName.value = data.title
 }
 getTip()
-const posts = ref([
-  {
-    post_id: 1,
-    post_name: 'DRX夺冠引热议,Deft最后一舞泪洒赛场',
-    content: '详细略',
-    post_time: '2022-11-16 21:44:30',
-    comment_num: 2,
-    likes_num: 999,
-    create_user_name: 'ghy',
-    create_user_pic: ''
-  },
-  {
-    post_id: 2,
-    post_name: '北航期末考试大作业重叠,学生不堪重负',
-    content: '详细略',
-    post_time: '2022-11-19 11:13:30',
-    comment_num: 999,
-    likes_num: 9999,
-    create_user_name: '匿名',
-    create_user_pic: ''
-  },
-]);
 
-const getAll = () => {
-  // Fetch data from API
-};
-
-const getTime = () => {
-  const now = new Date();
-  const yy = now.getFullYear();
-  const mm = (now.getMonth() + 1).toString().padStart(2, '0');
-  const dd = now.getDate().toString().padStart(2, '0');
-  const hh = now.getHours().toString().padStart(2, '0');
-  const mf = now.getMinutes().toString().padStart(2, '0');
-  const ss = now.getSeconds().toString().padStart(2, '0');
-  //gettime.value = `${yy}-${mm}-${dd} ${hh}:${mf}:${ss}`;
-};
-
-const currentTime = () => {
-  setInterval(getTime, 1000);
-};
 
 const userAddTagToGroup = () => {
   //console.log(usertag.value);
   // API call to add tag to group
 };
 
-const userCreatePost = (done) => {
-  //if (loading.value) {
-  //  return;
-  //}
-  // Confirmation dialog
-  //confirm('确定要提交表单吗？').then((result) => {
-    //if (result) {
-      //loading.value = true;
-      //timer.value = setTimeout(() => {
-        // Simulating API call to create a post
-        //clearTimeout(timer.value);
-        //loading.value = false;
-        //done();
-        //console.log('Post created!');
-      //}, 2000);
-    //}
-  //});
-};
-
-const cancelForm = () => {
-  //loading.value = false;
-  //dialog.value = false;
-  //clearTimeout(timer.value);
-};
-
 const intoPost = (id) => {
-  console.log(id);
+  router.push({ path: "/book-store/books/tips", query: { id: id,} })
   // Navigation logic to a post page
 };
 
-const userDeletePost = (id) => {
-  console.log(id);
+const userDeletePost = (tip_id) => {
+  console.log(tip_id)
+  ElMessageBox.confirm(
+    '此操作将删除该帖子，是否继续?',
+    '提示',
+    {
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(() => {
+      booksApi.deleteTipInfo({"tip_id":tip_id, "user_id":userData.value.id}).then((res: any) => {
+        if (res.data.code == 200) {
+          ElMessage({
+            type: 'success',
+            message: '删除成功',
+          })
+          getTip()
+        } else if (res.data.code == 400) {
+           ElMessage({
+            type: 'error',
+            message: '无权限删除该帖子',
+          })
+        }
+      })
+  })
+  .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '取消删除',
+      })
+    })
+  return
   // API call to delete post
 };
 
-onMounted(() => {
-  currentTime();
-  getAll();
-});
 </script>
 
-<style scoped>
+<style lang="less" scoped>
 .pic_table {
   position: relative;
   width: 1000px;
@@ -280,5 +289,65 @@ onMounted(() => {
   position: absolute;
   left: 350px;
   bottom: 100px;
+}
+
+.ellipsis-text span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.box-card {
+  width: 1200px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.content p {
+  color: #888; /* 灰色字体颜色 */
+}
+
+
+.poetry-detail-layout {
+  margin: 10px;
+  padding: 10px;
+  border-radius: 5px;
+
+  .box-card {
+    .card-header {
+      line-height: 35px;
+    }
+
+    .poetry-content {
+      font-weight: bold;
+      line-height: 30px;
+    }
+
+    .other-data {
+      text-align: center;
+
+      dl {
+        margin-top: 20px;
+
+      }
+
+      dd {
+        padding-top: 10px;
+        line-height: 30px;
+        text-indent: 32px;
+      }
+    }
+  }
+}
+.hhh{
+  margin: 10px;
+  padding: 10px;
+  border-radius: 5px;
 }
 </style>

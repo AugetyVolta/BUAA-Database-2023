@@ -194,7 +194,7 @@ const addTask = () => {
 const router = useRouter()
 const linkFun = (value: any) => {
   console.log(value)
-  router.push({ path: "/book-store/books/tips", query: { id: value.id, name: value.title, ...params.value } })
+  router.push({ path: "/book-store/books/communities", query: { id: value.id, name: value.title, ...params.value } })
 }
 
 
