@@ -202,7 +202,7 @@ const confirmEdit = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
   await formEl.validate((valid, fields) => {
     if (valid) {
-       booksApi.addBook(dataEditForm.value).then((res: any) => {
+       booksApi.addCommunity(dataEditForm.value).then((res: any) => {
       console.log(res.data)
       if (res.data.code == 200) {
         ElMessage.success("新增成功")

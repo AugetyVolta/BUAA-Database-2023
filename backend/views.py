@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 import jwt
 from django.db.models import Avg
@@ -147,11 +148,16 @@ def add_book(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
+            tags = data.get('tag')
             book = Book(name=data.get('name'),
                         author=data.get('author'),
-                        description=data.get('description'),
+                        description=data.get('introduction'),
                         pic_url=data.get('pic_url'))
             book.save()
+            for tag in tags:
+                label = Label.objects.get(content=tag)
+                newRelation = BookLabelRelation(book=book, label=label)
+                newRelation.save()
             res["code"] = 200
             res["message"] = "success"
             print('-------------------add_book-------------------')
@@ -160,6 +166,23 @@ def add_book(request):
             res["message"] = "服务器错误：书籍添加失败" + str(e)
     else:
         res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+def check_book(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        book = Book.objects.filter(name=request.GET.get('name'),
+                                   author=request.GET.get('author'))
+        if not book:
+            res["code"] = 200
+            res["message"] = "书籍可用"
+        else:
+            res["code"] = 400
+            res["message"] = "already exists"
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误:检查书籍失败" + str(e)
     return JsonResponse(res)
 
 
@@ -658,4 +681,22 @@ def add_bookLabelRelation(request):
             res["message"] = "服务器错误：创建标签书籍对应记录失败" + str(e)
     else:
         res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+# 上传图片
+def upload(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        pic = request.FILES.get('file')
+        upload_path = 'media/'
+        save_path = os.path.join(upload_path, pic.name)
+        with open(save_path, 'wb') as f:
+            for content in pic.chunks():
+                f.write(content)
+        res["code"] = 200
+        res["message"] = "success"
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误：上传图片失败" + str(e)
     return JsonResponse(res)

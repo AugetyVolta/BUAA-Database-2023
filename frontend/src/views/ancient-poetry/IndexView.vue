@@ -5,9 +5,29 @@ import {ancientPoetryApi} from '@/apis/ancient-poetry'
 import PaginationUnit from '@/components/Table/PaginationUnit.vue'
 import TableUnit from '@/components/Table/TableUnit.vue';
 import {useRouter, useRoute} from 'vue-router';
-import {ElMessage} from "element-plus";
+import {ElMessage, FormInstance, FormRules} from "element-plus";
+import {booksApi} from "@/apis/book-store";
 
 const route = useRoute()
+const localUserData = localStorage.getItem("user_data")
+
+interface userType {
+  account: string,
+  nickname: string,
+  age: null | number,
+  gender: string,
+  id: number
+}
+
+const userForm = reactive<userType>({
+  account: "",
+  nickname: "",
+  age: null,
+  gender: "",
+  id: 0
+})
+
+const userData = ref(localUserData && localUserData !== 'undefined' ? JSON.parse(localUserData as string) : userForm)
 const columns = reactive([
   {
     title: '标题',
@@ -133,10 +153,6 @@ const linkFun = (value: any) => {
   router.push({path: '/ancient/poetry/book', query: {id: value.id}})
 }
 
-const addBook = () => {
-
-}
-
 const digBook = () => {
   isLoading.value = true
   ancientPoetryApi.getBookFromDouBan().then((res: any) => {
@@ -149,7 +165,101 @@ const digBook = () => {
     }
     fetchTableData()
   })
+}
+let editDialogVisible = ref(false)
 
+interface TaskEditFormType {
+  name: string
+  author: string
+  introduction: string
+  user_id: number
+  tag: [],
+  pic_url: string
+}
+
+let dataEditForm = ref<TaskEditFormType>({
+  name: "",
+  author: "",
+  introduction: "",
+  user_id: userData.value.id,
+  tag: [],
+  pic_url: ""
+})
+
+const addBook = () => {
+  editDialogVisible.value = true;
+  dataEditForm.value = {
+    name: '',
+    author: '',
+    introduction: '',
+    user_id: userData.value.id,
+    tag: [],
+    pic_url: ""
+  }
+}
+
+const checkBook = (rule: any, value: any, callback: any) => {
+  if (dataEditForm.value.name.length <= 0) {
+    return callback(new Error('书籍标题不能为空'))
+  }
+  if (dataEditForm.value.author.length > 0) {
+    booksApi.checkBook({name: dataEditForm.value.name, author: dataEditForm.value.author}).then((res: any) => {
+      try {
+        if (res.data.code == 200) {
+          ElMessage.success(res.data.message)
+          callback()
+        } else {
+          callback(new Error("书籍已存在，请重新输入"))
+        }
+      } catch {
+        callback(new Error("书籍已存在，请重新输入"))
+      }
+    })
+  }
+}
+
+const rules = reactive<FormRules<typeof dataEditForm>>({
+  name: [
+    {required: true, validator: checkBook, trigger: "blur"}
+  ],
+  author: [{required: true, message: "作者不能为空", trigger: "blur"}],
+})
+
+const ruleFormRef = ref()
+const fileList = ref([]);
+const beforeUpload = (file) => {
+  // 验证上传的文件类型和大小等信息
+  // 只允许上传第一张图片
+  if (fileList.value.length >= 1) {
+    ElMessage.error('只能上传一张图片');
+    return false; // 阻止上传
+  }
+  fileList.value.push(file)
+  return true;
+};
+const photoBaseUrl = 'http://10.192.187.233:9000/'
+const handleUploadSuccess = (response, file, fileList) => {
+  // 处理上传成功的逻辑，可以从 response 中获取上传成功后的图片地址
+  dataEditForm.value.pic_url = photoBaseUrl + file.name
+};
+const handleUploadError = (err, file, fileList) => {
+  console.log(err)
+};
+
+const confirmEdit = async (formEl: FormInstance | undefined) => {
+  if (!formEl) return
+  await formEl.validate((valid, fields) => {
+    if (valid) {
+      booksApi.addBook(dataEditForm.value).then((res: any) => {
+        if (res.data.code == 200) {
+          ElMessage.success("新增成功")
+          editDialogVisible.value = false
+          fileList.value.pop()
+          fetchTableData()
+        }
+      })
+    }
+  })
 }
 
 </script>
@@ -162,8 +272,8 @@ const digBook = () => {
           <el-button type="primary" @click="handleSearch" icon="Search">查询</el-button>
           <el-button type="primary" @click="reSearch" plain icon="RefreshLeft">重置</el-button>
           <el-button type="primary" :disabled="isLoading" @click="digBook" plain icon="Upload">
-              <span v-if="isLoading">加载中...</span>
-              <span v-else>自动爬取</span>
+            <span v-if="isLoading">加载中...</span>
+            <span v-else>自动爬取</span>
           </el-button>
           <el-button @click="addBook" plain icon="Plus">新增</el-button>
         </div>
@@ -196,7 +306,45 @@ const digBook = () => {
                       :currentPage="params.page">
       </PaginationUnit>
     </div>
-
+    <el-dialog title="新增书籍" top="6vh" v-model="editDialogVisible" width="50%">
+      <div>
+        <el-form label-width="120px" :model="dataEditForm" :rules="rules" ref="ruleFormRef">
+          <el-form-item label="书籍标题" required prop="name">
+            <el-input v-model="dataEditForm.name"></el-input>
+          </el-form-item>
+          <el-form-item label="书籍作者" required prop="author">
+            <el-input v-model="dataEditForm.author"></el-input>
+          </el-form-item>
+          <el-form-item label="书籍标签">
+            <el-select clearable v-model="dataEditForm.tag" multiple>
+              <el-option v-for="(item, index) in tagOption" :label="item" :value="item"
+                         :key="index + 'tag'"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="书籍简介">
+            <el-input :rows="5" type="textarea" v-model="dataEditForm.introduction"></el-input>
+          </el-form-item>
+          <el-form-item label="上传图片">
+            <el-upload
+                action="http://10.192.187.233:8000/api/upload"
+                :before-upload="beforeUpload"
+                :on-success="handleUploadSuccess"
+                :on-error="handleUploadError"
+                :file-list="fileList"
+                list-type="picture-card"
+                :auto-upload="true">
+              <i class="el-icon-plus"></i>
+            </el-upload>
+          </el-form-item>
+        </el-form>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="editDialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="confirmEdit(ruleFormRef)">确 定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 <style lang="less" scoped></style>
