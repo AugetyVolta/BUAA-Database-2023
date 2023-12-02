@@ -246,6 +246,10 @@ const handleUploadError = (err, file, fileList) => {
   console.log(err)
 };
 
+const handleRemove = () => {
+  fileList.value.pop()
+}
+
 const confirmEdit = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
   await formEl.validate((valid, fields) => {
@@ -329,6 +333,7 @@ const confirmEdit = async (formEl: FormInstance | undefined) => {
                 action="http://10.192.187.233:8000/api/upload"
                 :before-upload="beforeUpload"
                 :on-success="handleUploadSuccess"
+                :on-remove="handleRemove"
                 :on-error="handleUploadError"
                 :file-list="fileList"
                 list-type="picture-card"
