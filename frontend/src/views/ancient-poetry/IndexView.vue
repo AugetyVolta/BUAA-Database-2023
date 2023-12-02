@@ -7,6 +7,8 @@ import TableUnit from '@/components/Table/TableUnit.vue';
 import {useRouter, useRoute} from 'vue-router';
 import {ElMessage, ElMessageBox, FormInstance, FormRules} from "element-plus";
 import {booksApi} from "@/apis/book-store";
+import * as XLSX from 'xlsx';
+import axios from "axios";
 
 const route = useRoute()
 const localUserData = localStorage.getItem("user_data")
@@ -303,6 +305,13 @@ const delRow = (value: any) => {
   return
 }
 
+const downLoadBookInfo = () => {
+  // 将前端数据转换为 Excel 文件
+  ancientPoetryApi.downLoadBooks().then((res: any) => {
+    const fileUrl = photoBaseUrl + res.data.data
+    window.open(fileUrl, '_blank');
+  })
+}
 
 </script>
 <template>
@@ -317,6 +326,8 @@ const delRow = (value: any) => {
             <span v-if="isLoading">加载中...</span>
             <span v-else>自动爬取</span>
           </el-button>
+          <el-button type="primary" @click="reSearch" plain icon="Upload">批量上传</el-button>
+          <el-button type="primary" @click="downLoadBookInfo" plain icon="Download">批量导出</el-button>
           <el-button @click="addBook" plain icon="Plus">新增</el-button>
         </div>
       </div>

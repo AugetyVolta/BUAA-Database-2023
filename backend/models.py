@@ -92,6 +92,18 @@ class Tip(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
+class TemporaryTip(models.Model):
+    id = models.AutoField(primary_key=True)
+    create_time = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    title = models.TextField(verbose_name="标题", blank=False, default="")
+    content = models.TextField(verbose_name="内容", blank=False)
+    support_times = models.IntegerField(verbose_name="点赞数", default=0)
+    unsupported_times = models.IntegerField(verbose_name="反对数", default=0)
+    # 外键
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+
 # 发言(发言id,创建时间,内容,所属帖子id,发言user)
 class Comment(models.Model):
     id = models.AutoField(primary_key=True)

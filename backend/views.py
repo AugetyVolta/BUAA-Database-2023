@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 import jwt
+import pandas as pd
 from django.db.models import Avg
 from django.http import HttpResponse, JsonResponse
 import json
@@ -351,6 +352,45 @@ def get_bookInfo(request):
         return JsonResponse(res)
 
 
+def downLoad_books(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        books = Book.objects.all().order_by("id")
+        res['data'] = []
+        data_item = {"id": 0, "title": "", "author": "", "introduction": "", "score": 0.0, "liked_times": 0, "tag": ""}
+        result = pd.DataFrame()
+        for book in books:
+            data_item['tag'] = ""
+            bookLabelRelations = BookLabelRelation.objects.filter(book=book)
+            for bookLabelRelation in bookLabelRelations:
+                data_item['tag'] += bookLabelRelation.label.content + " "
+            data_item['id'] = book.id
+            data_item['title'] = book.name
+            data_item['author'] = book.author
+            data_item['introduction'] = book.description
+            data_item['score'] = '%.1f' % Score.objects.filter(book_id=book.id).aggregate(
+                Avg('score')).get(
+                'score__avg') if Score.objects.filter(book_id=book.id) else 0
+            data_item['liked_times'] = Favourite.objects.filter(book=book).count()
+            cache = pd.DataFrame(
+                {"id": [data_item['id']], "title": [data_item['title']], "author": [data_item['author']],
+                 "introduction": [data_item['introduction']], "score": [data_item['score']],
+                 "liked_times": [data_item['liked_times']],
+                 "tag": [data_item['tag']]})
+            result = pd.concat([result, cache])
+            data_item = {"id": 0, "title": "", "author": "", "introduction": "", "score": 0.0, "liked_times": 0,
+                         "tag": ""}
+        result.head()
+        result.to_excel('media\书籍信息.xlsx')
+        res['data'] = "书籍信息.xlsx"
+        res["code"] = 200
+        res["message"] = "success"
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误：" + str(e)
+    return JsonResponse(res)
+
+
 # 添加收藏
 def add_favourite(request):
     res = {"code": 400, "message": "", "data": None}
@@ -611,12 +651,67 @@ def add_tip(request):
     return JsonResponse(res)
 
 
+def delete_tip(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            tip_id = data.get('tip_id')
+            user_id = data.get('user_id')
+            tip = Tip.objects.get(id=tip_id)
+            community = tip.community
+            community_own = OwnedCommunity.objects.get(community=community)
+            if tip.user.id == user_id or tip.user.id == community_own.user.id:
+                tip.delete()
+                res["code"] = 200
+                res["message"] = "success"
+            else:
+                res["code"] = 400
+                res["message"] = "fail"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：删除帖子失败" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+def add_support(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        tip = Tip.objects.get(id=request.GET.get('tip_id'))
+        tip.support_times += 1
+        tip.save()
+        res["code"] = 200
+        res["message"] = "success"
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误：点赞失败" + str(e)
+    return JsonResponse(res)
+
+
+def add_unsupported(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        tip = Tip.objects.get(id=request.GET.get('tip_id'))
+        tip.unsupported_times += 1
+        tip.save()
+        res["code"] = 200
+        res["message"] = "success"
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误：反对失败" + str(e)
+    return JsonResponse(res)
+
+
 # 获取帖子内容
 def get_tipList(request):
-    res = {"code": 400, "message": "", "data": None}
+    res = {"code": 400, "message": "", "data": None, "title": "", "topic": ""}
     try:
         res['data'] = []
         community = Community.objects.get(id=request.GET.get('id'))
+        res['title'] = community.title
+        res['topic'] = community.topic
         date_item = {"id": "", "title": "", "author": "", "content": "", "supported": 0, "unsupported": 0,
                      "commentNum": 0, "postTime": "", 'exactPostTime': ""}
         tips = Tip.objects.filter(community=community).order_by('id')
@@ -651,7 +746,7 @@ def add_comment(request):
             data = json.loads(request.body)
             tip = Tip.objects.get(id=data.get('tip_id'))
             post_user = User.objects.get(id=data.get('user_id'))
-            comment = Comment(content=data.get('content'),
+            comment = Comment(content=data.get('text'),
                               post_user=post_user,
                               tip=tip)
             comment.save()
@@ -663,6 +758,55 @@ def add_comment(request):
             res["message"] = "服务器错误：创建帖子评论失败" + str(e)
     else:
         res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+def delete_comment(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            user_id = data.get('user_id')
+            comment = Comment.objects.get(id=data.get('comment_id'))
+            post_user_id = comment.post_user.id
+            tip_owner_id = comment.tip.user.id
+            community_owner_id = OwnedCommunity.objects.get(community=comment.tip.community).user.id
+            if user_id == post_user_id or user_id == tip_owner_id or user_id == community_owner_id:
+                comment.delete()
+                res["code"] = 200
+                res["message"] = "success"
+            else:
+                res["code"] = 400
+                res["message"] = "fail"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：删除评论失败" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+def get_commentList(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        tip_id = request.GET.get('id')
+        tip = Tip.objects.get(id=tip_id)
+        comments = Comment.objects.filter(tip=tip).order_by('id')
+        res['data'] = []
+        data_item = {'id': 0, 'userName': "", "text": "", "date": ""}
+        for comment in comments:
+            data_item['id'] = comment.id
+            data_item['userName'] = comment.post_user.nickname
+            data_item['text'] = comment.content
+            time = str(comment.create_time)
+            data_item['date'] = time.split('.')[0]
+            res['data'].append(data_item)
+            data_item = {'id': 0, 'userName': "", "text": "", "date": ""}
+        res["code"] = 200
+        res["message"] = "success"
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误：获取评论列表失败" + str(e)
     return JsonResponse(res)
 
 

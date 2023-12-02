@@ -11,7 +11,7 @@ export const ancientPoetryApi = {
                 author: params.author,
                 introduction: params.introduction,
                 tag: params.tag
-            }
+            },
         })
     },
     getAncientPoetryInfo(id) {
@@ -22,6 +22,9 @@ export const ancientPoetryApi = {
     },
     getBookFromDouBan() {
         return axios.post('/api/dig_book')
+    },
+    downLoadBooks() {
+        return axios.get('/api/downLoad_books')
     }
 }
 export const ancientBooksApi = {

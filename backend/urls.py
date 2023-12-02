@@ -24,9 +24,15 @@ urlpatterns = [
     path('get_communities', views.get_communityList),
     path('check_community', views.check_community),
     path('add_tip', views.add_tip),
+    path('delete_tip', views.delete_tip),
+    path('add_support', views.add_support),
+    path('add_unsupported', views.add_unsupported),
     path('get_tipList', views.get_tipList),
     path('add_comment', views.add_comment),
+    path('delete_comment', views.delete_comment),
+    path('get_commentList', views.get_commentList),
     path('add_label', views.add_label),
-    path('upload', views.upload)
+    path('upload', views.upload),
+    path('downLoad_books', views.downLoad_books)
 
 ]
