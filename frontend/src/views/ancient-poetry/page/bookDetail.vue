@@ -85,7 +85,7 @@ const submitReview = async () => {
     ancientBooksApi.addNewReview(newReview).then(async (res: any) => {
       if (res.data.code == 200) {
         ElMessage.success("书评添加成功")
-        const {data} = await ancientBooksApi.getAncientBooksInfo(route.query.id)
+        const {data} = await ancientBooksApi.getAncientBooksInfo({id: route.query.id, user_id: userData.value.id})
         ancientBookData.value = data.data
         addReviewDialogVisible.value = false;
       }

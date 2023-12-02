@@ -35,7 +35,7 @@ export const booksApi = {
             data
         });
     },
-    deleteBookInfo(params: {}) {
+    deleteCommunity(params: {}) {
         return axios.post(`/api/delete_community`, params)
     },
 
@@ -60,6 +60,9 @@ export const booksApi = {
     },
     addBook(params) {
         return axios.post('/api/add_book', params)
+    },
+    deleteBook(params) {
+        return axios.post(`/api/delete_book`, params)
     },
 
     addSupport(id) {

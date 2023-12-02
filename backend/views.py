@@ -206,6 +206,28 @@ def dig_book(request):
     return JsonResponse(res)
 
 
+def delete_book(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            book = Book.objects.get(name=data.get('title'), author=data.get('author'))
+            user_id = data.get('user_id')
+            if user_id == 1:
+                book.delete()
+                res["code"] = 200
+                res["message"] = "success"
+            else:
+                res["code"] = 400
+                res["message"] = "fail"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：书籍删除失败" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
 def getBookList(request):
     res = {"code": 400, "message": "", "data": None, "total": 0}
     try:
@@ -596,7 +618,7 @@ def get_tipList(request):
         res['data'] = []
         community = Community.objects.get(id=request.GET.get('id'))
         date_item = {"id": "", "title": "", "author": "", "content": "", "supported": 0, "unsupported": 0,
-                     "commentNum": 0, "postTime": ""}
+                     "commentNum": 0, "postTime": "", 'exactPostTime': ""}
         tips = Tip.objects.filter(community=community).order_by('id')
         for tip in tips:
             date_item['id'] = tip.id
@@ -606,11 +628,13 @@ def get_tipList(request):
             date_item['supported'] = tip.support_times
             date_item['unsupported'] = tip.unsupported_times
             time = str(tip.create_time)
-            date_item['postTime'] = time.split('.')[0]
+            time = time.split('.')[0]
+            date_item['postTime'] = time.split(' ')[0]
+            date_item['exactPostTime'] = time
             date_item['commentNum'] = Comment.objects.filter(tip=tip).count()
             res['data'].append(date_item)
             date_item = {"id": "", "title": "", "author": "", "content": "", "supported": 0, "unsupported": 0,
-                         "commentNum": 0, "postTime": ""}
+                         "commentNum": 0, "postTime": "", 'exactPostTime': ""}
         res["code"] = 200
         res["message"] = "success"
     except Exception as e:
