@@ -224,7 +224,7 @@ const delRow = (value: any) => {
       type: 'warning',
     }
   ).then(() => {
-      booksApi.deleteBookInfo({"name":value.name, "user_id":dataEditForm.value.user_id}).then((res: any) => {
+      booksApi.deleteCommunity({"name":value.name, "user_id":dataEditForm.value.user_id}).then((res: any) => {
         if (res.data.code == 200) {
           ElMessage({
             type: 'success',
@@ -239,6 +239,12 @@ const delRow = (value: any) => {
         }
       })
   })
+  .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '取消删除',
+      })
+    })
   return
 }
 

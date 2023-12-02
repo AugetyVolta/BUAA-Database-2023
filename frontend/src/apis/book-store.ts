@@ -35,10 +35,9 @@ export const booksApi = {
             data
         });
     },
-    deleteBookInfo(params: {}) {
+    deleteCommunity(params: {}) {
         return axios.post(`/api/delete_community`, params)
     },
-
     checkQuanzi(name) {
         return axios.get(`/api/check_community?title=${name}`);
     },
@@ -60,8 +59,10 @@ export const booksApi = {
     },
     addBook(params) {
         return axios.post('/api/add_book', params)
-    }
-
+    },
+    deleteBook(params) {
+        return axios.post(`/api/delete_book`, params)
+    },
 }
 // 借书管理
 export const borrowerApi = {

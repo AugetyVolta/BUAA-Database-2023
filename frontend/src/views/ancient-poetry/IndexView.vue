@@ -5,7 +5,7 @@ import {ancientPoetryApi} from '@/apis/ancient-poetry'
 import PaginationUnit from '@/components/Table/PaginationUnit.vue'
 import TableUnit from '@/components/Table/TableUnit.vue';
 import {useRouter, useRoute} from 'vue-router';
-import {ElMessage, FormInstance, FormRules} from "element-plus";
+import {ElMessage, ElMessageBox, FormInstance, FormRules} from "element-plus";
 import {booksApi} from "@/apis/book-store";
 
 const route = useRoute()
@@ -265,6 +265,44 @@ const confirmEdit = async (formEl: FormInstance | undefined) => {
     }
   })
 }
+const delRow = (value: any) => {
+  ElMessageBox.confirm(
+      '此操作将删除该图书，是否继续?',
+      '提示',
+      {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+  ).then(() => {
+    booksApi.deleteBook({
+      "title": value.title,
+      "author": value.author,
+      "user_id": dataEditForm.value.user_id
+    }).then((res: any) => {
+      if (res.data.code == 200) {
+        ElMessage({
+          type: 'success',
+          message: '删除成功',
+        })
+        fetchTableData()
+      } else if (res.data.code == 400) {
+        ElMessage({
+          type: 'error',
+          message: '无权限删除该图书',
+        })
+      }
+    })
+  })
+      .catch(() => {
+        ElMessage({
+          type: 'info',
+          message: '取消删除',
+        })
+      })
+  return
+}
+
 
 </script>
 <template>
@@ -304,7 +342,10 @@ const confirmEdit = async (formEl: FormInstance | undefined) => {
       </div>
     </div>
     <div class="table-box">
-      <TableUnit :list="list" @linkFun="linkFun" :columns="columns">
+      <TableUnit :list="list" :columns="columns" @linkFun="linkFun">
+        <template v-slot="record">
+          <el-button plain size="small" icon="Delete" type="danger" @click="delRow(record.record)"></el-button>
+        </template>
       </TableUnit>
       <PaginationUnit @handleCurrentChange="handleCurrentChange" @handleSizeChange="handleSizeChange" :total="total"
                       :currentPage="params.page">
