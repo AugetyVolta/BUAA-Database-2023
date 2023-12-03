@@ -18,6 +18,7 @@ class User(models.Model):
     password = models.CharField(verbose_name="密码", max_length=255, blank=False)
     gender = models.CharField(verbose_name="性别", max_length=5, blank=True)
     age = models.IntegerField(verbose_name="年龄", blank=True)
+    privilege = models.IntegerField(verbose_name="权限", default=3)
 
 
 # 书籍表(书籍id,书名,作者,内容介绍,图片路径)

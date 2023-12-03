@@ -155,15 +155,19 @@ const linkFun = (value: any) => {
 
 const digBook = () => {
   isLoading.value = true
-  ancientPoetryApi.getBookFromDouBan().then((res: any) => {
+  ancientPoetryApi.getBookFromDouBan({"user_id":userData.value.id}).then((res: any) => {
     if (res.data.code == 200) {
       ElMessage({
         type: 'success',
         message: '成功添加' + res.data.data + '本书籍',
       })
       isLoading.value = false
+      fetchTableData()
+    } else if (res.data.code == 400) {
+      ElMessage.error("没有权限爬取书籍")
+      isLoading.value = false
     }
-    fetchTableData()
+
   })
 }
 let editDialogVisible = ref(false)
@@ -262,6 +266,10 @@ const confirmEdit = async (formEl: FormInstance | undefined) => {
           editDialogVisible.value = false
           fileList.value.pop()
           fetchTableData()
+        } else if (res.data.code == 400) {
+          ElMessage.error("没有权限上传书籍")
+          editDialogVisible.value = false
+          fileList.value.pop()
         }
       })
     }
@@ -302,12 +310,16 @@ const handleBookRemove = () => {
 }
 
 const confirmUpload = () => {
-  booksApi.uploadBooks({"filename": fileName}).then((res: any) => {
+  booksApi.uploadBooks({"filename": fileName, "user_id": userData.value.id}).then((res: any) => {
     if (res.data.code == 200) {
       ElMessage.success("成功导入" + res.data.data + "本书籍")
       uploadDialogVisible.value = false
       bookFileList.value.pop()
       fetchTableData()
+    } else if (res.data.code == 400) {
+      ElMessage.error("没有权限上传书籍")
+      uploadDialogVisible.value = false
+      bookFileList.value.pop()
     }
   })
 }
@@ -352,9 +364,13 @@ const delRow = (value: any) => {
 
 const downLoadBookInfo = () => {
   // 将前端数据转换为 Excel 文件
-  ancientPoetryApi.downLoadBooks().then((res: any) => {
-    const fileUrl = photoBaseUrl + res.data.data
-    window.open(fileUrl, '_blank');
+  ancientPoetryApi.downLoadBooks(userData.value.id).then((res: any) => {
+    if (res.data.code == 200) {
+      const fileUrl = photoBaseUrl + res.data.data
+      window.open(fileUrl, '_blank');
+    } else if (res.data.code == 400) {
+      ElMessage.error("没有权限导出书籍")
+    }
   })
 }
 

@@ -149,19 +149,24 @@ def add_book(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            tags = data.get('tag')
-            book = Book(name=data.get('name'),
-                        author=data.get('author'),
-                        description=data.get('introduction'),
-                        pic_url=data.get('pic_url'))
-            book.save()
-            for tag in tags:
-                label = Label.objects.get(content=tag)
-                newRelation = BookLabelRelation(book=book, label=label)
-                newRelation.save()
-            res["code"] = 200
-            res["message"] = "success"
-            print('-------------------add_book-------------------')
+            user = User.objects.get(id=data.get('user_id'))
+            if user.privilege <= 2:
+                tags = data.get('tag')
+                book = Book(name=data.get('name'),
+                            author=data.get('author'),
+                            description=data.get('introduction'),
+                            pic_url=data.get('pic_url'))
+                book.save()
+                for tag in tags:
+                    label = Label.objects.get(content=tag)
+                    newRelation = BookLabelRelation(book=book, label=label)
+                    newRelation.save()
+                res["code"] = 200
+                res["message"] = "success"
+                print('-------------------add_book-------------------')
+            else:
+                res["code"] = 400
+                res["message"] = "fail"
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：书籍添加失败" + str(e)
@@ -192,13 +197,19 @@ def dig_book(request):
     res = {"code": 400, "message": "", "data": None}
     if request.method == "POST":
         try:
-            book_data = dig_books()
-            books_to_create = [Book(**data) for data in book_data]
-            Book.objects.bulk_create(books_to_create)
-            res['data'] = len(book_data)
-            res["code"] = 200
-            res["message"] = "success"
-            print('-------------------dig_book-------------------')
+            data = json.loads(request.body)
+            user = User.objects.get(id=data.get('user_id'))
+            if user.privilege <= 2:
+                book_data = dig_books()
+                books_to_create = [Book(**data) for data in book_data]
+                Book.objects.bulk_create(books_to_create)
+                res['data'] = len(book_data)
+                res["code"] = 200
+                res["message"] = "success"
+                print('-------------------dig_book-------------------')
+            else:
+                res["code"] = 400
+                res["message"] = "fail"
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：书籍爬取失败" + str(e)
@@ -212,14 +223,19 @@ def upload_book(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            file_path = "D:/桌面/数据库/Project/BUAA-Database/media/" + data.get('filename')
-            df = pd.read_excel(file_path)
-            book_data = df.to_dict(orient='records')
-            books_to_create = [Book(**data) for data in book_data]
-            Book.objects.bulk_create(books_to_create)
-            res['data'] = len(book_data)
-            res["code"] = 200
-            res["message"] = "success"
+            user = User.objects.get(id=data.get('user_id'))
+            if user.privilege <= 2:
+                file_path = "D:/桌面/数据库/Project/BUAA-Database/media/" + data.get('filename')
+                df = pd.read_excel(file_path)
+                book_data = df.to_dict(orient='records')
+                books_to_create = [Book(**data) for data in book_data]
+                Book.objects.bulk_create(books_to_create)
+                res['data'] = len(book_data)
+                res["code"] = 200
+                res["message"] = "success"
+            else:
+                res["code"] = 400
+                res["message"] = "fail"
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：书籍爬取失败" + str(e)
@@ -234,8 +250,8 @@ def delete_book(request):
         try:
             data = json.loads(request.body)
             book = Book.objects.get(name=data.get('title'), author=data.get('author'))
-            user_id = data.get('user_id')
-            if user_id == 1:
+            user = User.objects.get(id=data.get('user_id'))
+            if user.privilege <= 2:
                 book.delete()
                 res["code"] = 200
                 res["message"] = "success"
@@ -255,7 +271,8 @@ def edit_book(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            if data.get('user_id') == 1:
+            user = User.objects.get(id=data.get('user_id'))
+            if user.privilege <= 2:
                 book = Book.objects.get(name=data.get('name'), author=data.get('author'))
                 relations = BookLabelRelation.objects.filter(book=book)
                 tags = data.get('tag')
@@ -411,36 +428,42 @@ def get_bookInfo(request):
 def downLoad_books(request):
     res = {"code": 400, "message": "", "data": None}
     try:
-        books = Book.objects.all().order_by("id")
-        res['data'] = []
-        data_item = {"id": 0, "title": "", "author": "", "introduction": "", "score": 0.0, "liked_times": 0, "tag": ""}
-        result = pd.DataFrame()
-        for book in books:
-            data_item['tag'] = ""
-            bookLabelRelations = BookLabelRelation.objects.filter(book=book)
-            for bookLabelRelation in bookLabelRelations:
-                data_item['tag'] += bookLabelRelation.label.content + " "
-            data_item['id'] = book.id
-            data_item['title'] = book.name
-            data_item['author'] = book.author
-            data_item['introduction'] = book.description
-            data_item['score'] = '%.1f' % Score.objects.filter(book_id=book.id).aggregate(
-                Avg('score')).get(
-                'score__avg') if Score.objects.filter(book_id=book.id) else 0
-            data_item['liked_times'] = Favourite.objects.filter(book=book).count()
-            cache = pd.DataFrame(
-                {"id": [data_item['id']], "title": [data_item['title']], "author": [data_item['author']],
-                 "introduction": [data_item['introduction']], "score": [data_item['score']],
-                 "liked_times": [data_item['liked_times']],
-                 "tag": [data_item['tag']]})
-            result = pd.concat([result, cache])
+        user = User.objects.get(id=request.GET.get('user_id'))
+        if user.privilege <= 2:
+            books = Book.objects.all().order_by("id")
+            res['data'] = []
             data_item = {"id": 0, "title": "", "author": "", "introduction": "", "score": 0.0, "liked_times": 0,
                          "tag": ""}
-        result.head()
-        result.to_excel('media\书籍信息.xlsx')
-        res['data'] = "书籍信息.xlsx"
-        res["code"] = 200
-        res["message"] = "success"
+            result = pd.DataFrame()
+            for book in books:
+                data_item['tag'] = ""
+                bookLabelRelations = BookLabelRelation.objects.filter(book=book)
+                for bookLabelRelation in bookLabelRelations:
+                    data_item['tag'] += bookLabelRelation.label.content + " "
+                data_item['id'] = book.id
+                data_item['title'] = book.name
+                data_item['author'] = book.author
+                data_item['introduction'] = book.description
+                data_item['score'] = '%.1f' % Score.objects.filter(book_id=book.id).aggregate(
+                    Avg('score')).get(
+                    'score__avg') if Score.objects.filter(book_id=book.id) else 0
+                data_item['liked_times'] = Favourite.objects.filter(book=book).count()
+                cache = pd.DataFrame(
+                    {"id": [data_item['id']], "title": [data_item['title']], "author": [data_item['author']],
+                     "introduction": [data_item['introduction']], "score": [data_item['score']],
+                     "liked_times": [data_item['liked_times']],
+                     "tag": [data_item['tag']]})
+                result = pd.concat([result, cache])
+                data_item = {"id": 0, "title": "", "author": "", "introduction": "", "score": 0.0, "liked_times": 0,
+                             "tag": ""}
+            result.head()
+            result.to_excel('media\书籍信息.xlsx')
+            res['data'] = "书籍信息.xlsx"
+            res["code"] = 200
+            res["message"] = "success"
+        else:
+            res["code"] = 400
+            res["message"] = "fail"
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：" + str(e)

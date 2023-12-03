@@ -14,17 +14,11 @@ export const ancientPoetryApi = {
             },
         })
     },
-    getAncientPoetryInfo(id) {
-        return request({
-            url: `/ancient/poetry/${id}`,
-            method: "get",
-        });
+    getBookFromDouBan(params) {
+        return axios.post('/api/dig_book', params)
     },
-    getBookFromDouBan() {
-        return axios.post('/api/dig_book')
-    },
-    downLoadBooks() {
-        return axios.get('/api/downLoad_books')
+    downLoadBooks(user_id) {
+        return axios.get(`/api/downLoad_books?user_id=${user_id}`)
     }
 }
 export const ancientBooksApi = {
