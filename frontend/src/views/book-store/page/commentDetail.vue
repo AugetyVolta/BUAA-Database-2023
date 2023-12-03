@@ -1,10 +1,17 @@
 <template>
+    <div class="back">
+      <el-button class="circleBtn" type="primary"
+        @click="router.push({ path: '/book-store/books/communities', query: { id : community_id } })" plain icon="ArrowLeft" round>
+      </el-button>
+      <b>{{ postName }}</b>
+    </div>
+
   <div class="comment-section">
     <!-- 发表评论 -->
     <el-card class="comment-input">
       <el-row>
         <el-col :span="20">
-          <el-input v-model="paramsForm.text" placeholder="发表评论..." clearable></el-input>
+          <el-input v-model="paramsForm.text" clearable @keydown.enter="postComment" placeholder="发表评论..."></el-input>
         </el-col>
         <el-col :span="4">
           <el-button type="primary" @click="postComment">发表</el-button>
@@ -37,6 +44,8 @@ import {get} from "axios";
 const router = useRouter()
 const route = useRoute()
 const localUserData = localStorage.getItem("user_data")
+const postName = ref("")
+let community_id = 0
 interface userType {
   account: string,
   nickname: string,
@@ -58,8 +67,11 @@ const userData = ref(localUserData && localUserData !== 'undefined' ? JSON.parse
 const comments = ref([])
 const getComments = async () => {
   const { data } = await booksApi.getCommentInfo(route.query.id)
-  console.log(data.data)
+console.log(data.community_id)
   comments.value = data.data
+  postName.value = data.title
+  community_id = data.community_id
+
 }
 getComments()
 
