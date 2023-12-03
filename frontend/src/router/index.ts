@@ -30,38 +30,38 @@ const routes: Array<RouteRecordRaw> = [
                     title: "知音阁",
                     icon: "Memo"
                 },
-                component: () => import('@/views/book-store/IndexView.vue'),
+                component: () => import('@/views/community/IndexView.vue'),
                 // children: [
                 //     // {
-                //     //     path: '/book-store/books',
+                //     //     path: '/community/books',
                 //     //     name: 'books',
                 //     //     meta: {
                 //     //         title: "书籍管理",
                 //     //         icon: "Memo"
                 //     //     },
-                //     //     component: () => import('@/views/book-store/IndexView.vue')
+                //     //     component: () => import('@/views/community/IndexView.vue')
                 //     // },
                 //     {
-                //         path: '/book-store/books/communities',
+                //         path: '/community/books/communities',
                 //         name: 'tipsDetail',
                 //         meta: {
                 //             title: "相关帖子",
                 //             parent: "书籍管理",
-                //             parentPath: "/book-store/books/",
+                //             parentPath: "/community/books/",
                 //             hidden
                 //         },
-                //         component: () => import('@/views/book-store/page/tipDetail.vue'),
+                //         component: () => import('@/views/community/page/tipDetail.vue'),
                 //     },
                 //     {
-                //         path: '/book-store/books/tips',
+                //         path: '/community/books/tips',
                 //         name: 'commentDetail',
                 //         meta: {
                 //             title: "评论区",
                 //             parent: "书籍管理",
-                //             parentPath: "/book-store/books/",
+                //             parentPath: "/community/books/",
                 //             hidden
                 //         },
-                //         component: () => import('@/views/book-store/page/commentDetail.vue'),
+                //         component: () => import('@/views/community/page/commentDetail.vue'),
                 //     },
                 // ],
 
@@ -75,7 +75,7 @@ const routes: Array<RouteRecordRaw> = [
                     parentPath: "/community/communities",
                     hidden
                 },
-                component: () => import('@/views/book-store/page/tipDetail.vue'),
+                component: () => import('@/views/community/page/tipDetail.vue'),
             },
             {
                 path: '/community/tip/comments',
@@ -86,7 +86,7 @@ const routes: Array<RouteRecordRaw> = [
                     parentPath: "/community/communities",
                     hidden
                 },
-                component: () => import('@/views/book-store/page/commentDetail.vue'),
+                component: () => import('@/views/community/page/commentDetail.vue'),
             },
             {
                 path: '/tasks',
@@ -113,7 +113,7 @@ const routes: Array<RouteRecordRaw> = [
                             title: "翰墨阁",
                             icon: "Document"
                         },
-                        component: () => import('@/views/ancient-poetry/IndexView.vue'),
+                        component: () => import('@/views/book/IndexView.vue'),
                     },
                     {
                         path: '/library/books',
@@ -122,7 +122,7 @@ const routes: Array<RouteRecordRaw> = [
                             title: "文轩阁",
                             icon: "Notebook"
                         },
-                        component: () => import('@/views/ancient-poetry/AncientBooks.vue'),
+                        component: () => import('@/views/book/Library.vue'),
 
                     },
                     {
@@ -134,7 +134,7 @@ const routes: Array<RouteRecordRaw> = [
                             parentPath: "/library/books",
                             hidden
                         },
-                        component: () => import('@/views/ancient-poetry/page/bookDetail.vue'),
+                        component: () => import('@/views/book/page/bookDetail.vue'),
                     },
                 ],
 

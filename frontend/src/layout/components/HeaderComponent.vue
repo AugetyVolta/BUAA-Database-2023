@@ -31,11 +31,11 @@ const outLogin = (): void => {
 }
 const { toggle, } = useFullscreen()
 const route = useRoute()
-let userData = ref({ user_name: "XXXX", user_account: "XXXX" })
-if (userData.value.user_name == 'XXXX') {
+let userData = ref({ nickname: "XXXX", account: "XXXX" })
+if (userData.value.nickname == 'XXXX') {
   setTimeout(() => {
     const userinfo = localStorage.getItem("user_data")
-    userData.value = userinfo && userinfo !== 'undefined' ? JSON.parse(userinfo as string) : { user_name: "XXXX", user_account: "XXXX" }
+    userData.value = userinfo && userinfo !== 'undefined' ? JSON.parse(userinfo as string) : { nickname: "XXXX", account: "XXXX" }
   }, 200);
 }
 interface meat { path: string, title: string }
@@ -89,7 +89,7 @@ watch(route, (next, _) => {
     </div>
     <div class="header-right-layout">
       <el-button class="right-icon" icon="User" @click="router.push({ path: '/user-center' })">
-        {{ userData.user_account }} / {{ userData.user_name }}
+        {{ userData.account }} / {{ userData.nickname }}
       </el-button>
       <el-icon @click="toggle" class="icon right-icon">
         <FullScreen />
@@ -142,8 +142,6 @@ watch(route, (next, _) => {
       margin-right: 30px;
     }
   }
-
-
 
 
   .icon {
