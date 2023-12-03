@@ -682,7 +682,7 @@ def delete_tip(request):
             tip = Tip.objects.get(id=tip_id)
             community = tip.community
             community_own = OwnedCommunity.objects.get(community=community)
-            if tip.user.id == user_id or tip.user.id == community_own.user.id:
+            if tip.user.id == user_id or user_id == community_own.user.id:
                 tip.delete()
                 res["code"] = 200
                 res["message"] = "success"
