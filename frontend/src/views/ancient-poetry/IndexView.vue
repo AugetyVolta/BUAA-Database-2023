@@ -7,8 +7,6 @@ import TableUnit from '@/components/Table/TableUnit.vue';
 import {useRouter, useRoute} from 'vue-router';
 import {ElMessage, ElMessageBox, FormInstance, FormRules} from "element-plus";
 import {booksApi} from "@/apis/book-store";
-import * as XLSX from 'xlsx';
-import axios from "axios";
 
 const route = useRoute()
 const localUserData = localStorage.getItem("user_data")
@@ -169,6 +167,7 @@ const digBook = () => {
   })
 }
 let editDialogVisible = ref(false)
+let uploadDialogVisible = ref(false)
 
 interface TaskEditFormType {
   name: string
@@ -267,6 +266,51 @@ const confirmEdit = async (formEl: FormInstance | undefined) => {
     }
   })
 }
+
+const bookFileList = ref([]);
+
+const uploadBook = () => {
+  uploadDialogVisible.value = true;
+}
+
+const beforeUploadBook = (file) => {
+  // 验证上传的文件类型和大小等信息
+  const filename = file.name
+  const fileExtension = filename.split('.').pop().toLowerCase();
+  if (fileExtension != 'xlsx') {
+    ElMessage.error('请上传xlsx文件');
+    return false; // 阻止上传
+  }
+  // 只允许上传一份文件
+  if (bookFileList.value.length >= 1) {
+    ElMessage.error('只能上传一个文件');
+    return false; // 阻止上传
+  }
+  bookFileList.value.push(file)
+  return true;
+};
+
+let fileName = "";
+const handleUploadBookSuccess = (response, file, fileList) => {
+  // 处理上传成功的逻辑，可以从 response 中获取上传成功后的文件地址
+  fileName = file.name
+};
+
+const handleBookRemove = () => {
+  bookFileList.value.pop()
+}
+
+const confirmUpload = () => {
+  booksApi.uploadBooks({"filename": fileName}).then((res: any) => {
+    if (res.data.code == 200) {
+      ElMessage.success("成功导入" + res.data.data + "本书籍")
+      uploadDialogVisible.value = false
+      bookFileList.value.pop()
+      fetchTableData()
+    }
+  })
+}
+
 const delRow = (value: any) => {
   ElMessageBox.confirm(
       '此操作将删除该图书，是否继续?',
@@ -326,7 +370,7 @@ const downLoadBookInfo = () => {
             <span v-if="isLoading">加载中...</span>
             <span v-else>自动爬取</span>
           </el-button>
-          <el-button type="primary" @click="reSearch" plain icon="Upload">批量上传</el-button>
+          <el-button type="primary" @click="uploadBook" plain icon="Upload">批量上传</el-button>
           <el-button type="primary" @click="downLoadBookInfo" plain icon="Download">批量导出</el-button>
           <el-button @click="addBook" plain icon="Plus">新增</el-button>
         </div>
@@ -399,6 +443,35 @@ const downLoadBookInfo = () => {
         <span class="dialog-footer">
           <el-button @click="editDialogVisible = false">取 消</el-button>
           <el-button type="primary" @click="confirmEdit(ruleFormRef)">确 定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+    <el-dialog title="批量上传书籍" top="6vh" v-model="uploadDialogVisible" width="50%">
+      <div>
+        <el-form label-width="120px" :model="dataEditForm" :rules="rules" ref="ruleFormRef">
+          <el-form-item label="上传格式">
+            <el-text>(name,author,description,pic_url)</el-text>
+          </el-form-item>
+          <el-form-item label="上传书籍">
+            <el-upload
+                class="upload"
+                drag
+                :before-upload="beforeUploadBook"
+                :on-success="handleUploadBookSuccess"
+                :on-remove="handleBookRemove"
+                :file-list="bookFileList"
+                action="http://10.192.187.233:8000/api/upload">
+              <i class="el-icon-upload"></i>
+              <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+              <div class="el-upload__tip" slot="tip">只能上传.xlsx文件</div>
+            </el-upload>
+          </el-form-item>
+        </el-form>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="uploadDialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="confirmUpload()">确 定</el-button>
         </span>
       </template>
     </el-dialog>

@@ -207,6 +207,27 @@ def dig_book(request):
     return JsonResponse(res)
 
 
+def upload_book(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            file_path = "D:/桌面/数据库/Project/BUAA-Database/media/" + data.get('filename')
+            df = pd.read_excel(file_path)
+            book_data = df.to_dict(orient='records')
+            books_to_create = [Book(**data) for data in book_data]
+            Book.objects.bulk_create(books_to_create)
+            res['data'] = len(book_data)
+            res["code"] = 200
+            res["message"] = "success"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：书籍爬取失败" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
 def delete_book(request):
     res = {"code": 400, "message": "", "data": None}
     if request.method == "POST":
@@ -856,11 +877,11 @@ def add_bookLabelRelation(request):
 def upload(request):
     res = {"code": 400, "message": "", "data": None}
     try:
-        pic = request.FILES.get('file')
+        file = request.FILES.get('file')
         upload_path = 'media/'
-        save_path = os.path.join(upload_path, pic.name)
+        save_path = os.path.join(upload_path, file.name)
         with open(save_path, 'wb') as f:
-            for content in pic.chunks():
+            for content in file.chunks():
                 f.write(content)
         res["code"] = 200
         res["message"] = "success"

@@ -61,6 +61,9 @@ export const booksApi = {
     addBook(params) {
         return axios.post('/api/add_book', params)
     },
+    uploadBooks(params) {
+        return axios.post('/api/upload_book', params)
+    },
     deleteBook(params) {
         return axios.post(`/api/delete_book`, params)
     },
@@ -84,12 +87,11 @@ export const booksApi = {
     addComment(params) {
         return axios.post(`/api/add_comment`, params)
     },
-
     deleteComment(params) {
         return axios.post(`/api/delete_comment`, params)
     }
-
 }
+
 // 借书管理
 export const borrowerApi = {
     getBorrowerList(params = {}) {
