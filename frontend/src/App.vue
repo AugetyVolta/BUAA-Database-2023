@@ -8,15 +8,15 @@
     <div class="mobile" v-else>
       <img src="@/assets/img/login-box-bg.svg" alt="">
       <h3>书缘社</h3>
-      <p>当前访问地址为PC端，手机端访问方式</p>
-      <p><a href="http://www.chensc.com.cn/mobile">http://www.chensc.com.cn/mobile</a></p>
+      <p>当前访问地址为PC端，请使用PC访问</p>
     </div>
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, provide } from 'vue';
-import { ElNotification } from 'element-plus';
+import {ref, provide} from 'vue';
+import {ElNotification} from 'element-plus';
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+
 const routerAlive = ref(true)
 const userAgent = navigator.userAgent;
 let isPC = ref(true)
