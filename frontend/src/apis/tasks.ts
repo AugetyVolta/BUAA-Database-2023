@@ -1,17 +1,18 @@
 import request from '@/utils/request'
+import axios from "axios";
 export function taskList(params = {}) {
-  return request({
-    url: `/tasks/list`,
-    method: "get",
-    params,
-  });
+  return axios.post(`/api/get_task`, params)
 }
-export function addtask(params = {}) {
-  return request({
-    url: `/tasks/create`,
-    method: "post",
-    data: params,
-  });
+
+export function othertaskList(params = {}) {
+  return axios.post(`/api/get_tip_status`, params)
+}
+export function acceptPost(param) {
+  return axios.post(`/api/accept_tip`, param)
+}
+
+export function refusePost(param) {
+  return axios.post(`/api/refuse_tip`, param)
 }
 export function updatetask(params = {}, id = null) {
   return request({
