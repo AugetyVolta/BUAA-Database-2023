@@ -45,11 +45,17 @@ const columns = reactive([
     width: 120
   },
   {
+    title: '帖子标题',
+    dataIndex: 'title',
+    align: "center",
+    width:100
+  },
+  {
     title: '发帖内容',
     dataIndex: 'content',
     align: "center",
     overflow: true,
-    width: 160,
+    width: 120,
   },
   {
     title: '任务状态',
@@ -75,14 +81,16 @@ const otherColumns = reactive([
   {
     title: '帖子标题',
     dataIndex: "title",
-    width: 160,
-    overflow: true
+    width: 120,
+    overflow: true,
+    align: "center"
   },
   {
     title: "帖子内容",
     dataIndex: "content",
-    width:160,
-    overflow:true
+    width:120,
+    overflow:true,
+    align: "center"
   },
   {
     title: '状态',
