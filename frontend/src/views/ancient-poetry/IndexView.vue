@@ -150,7 +150,7 @@ const reSearch = () => {
 }
 const router = useRouter()
 const linkFun = (value: any) => {
-  router.push({path: '/ancient/poetry/book', query: {id: value.id}})
+  router.push({path: '/library/books/book', query: {id: value.id}})
 }
 
 const digBook = () => {
@@ -384,7 +384,7 @@ const editRow = (value: any) => {
   <div>
     <div class="form-container">
       <div class="form-title">
-        <h4>书籍管理</h4>
+        <h4>翰墨阁</h4>
         <div class="button-box">
           <el-button type="primary" @click="handleSearch" icon="Search">查询</el-button>
           <el-button type="primary" @click="reSearch" plain icon="RefreshLeft">重置</el-button>

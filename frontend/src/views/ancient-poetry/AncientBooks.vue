@@ -50,14 +50,14 @@ const loadingMoreData = () => {
   params.value.page += 1
 }
 const goBookDetail = (id: number) => {
-  router.push({path: '/ancient/poetry/book', query: {id,}})
+  router.push({path: '/library/books/book', query: {id,}})
 }
 </script>
 <template>
   <div class="ancient-books-layout">
     <div class="search-box">
       <div class="search-container">
-        <h4 class="layout-title">古籍学习</h4>
+        <h4 class="layout-title">文轩阁</h4>
         <div class="search">
           <el-input clearable @keydown.enter="handleSearch" @clear="handleSearch" size="large" v-model="params.name"
                     placeholder="请输入书籍名称">

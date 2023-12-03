@@ -1,7 +1,7 @@
 <template>
     <div class="back">
       <el-button class="circleBtn" type="primary"
-        @click="router.push({ path: '/book-store/books/communities', query: { id : community_id } })" plain icon="ArrowLeft" round>
+        @click="router.push({ path: '/community/tips', query: { id : community_id } })" plain icon="ArrowLeft" round>
       </el-button>
       <b>{{ postName }}</b>
     </div>

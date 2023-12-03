@@ -140,7 +140,6 @@ onMounted(() => {
         </span>
       </template>
     </el-dialog>
-    <p class="filings-number"><a href="https://beian.miit.gov.cn">网站备案/许可证编号：黔ICP备2023014986号</a></p>
   </dl>
 </template>
 <style lang="less" scoped>

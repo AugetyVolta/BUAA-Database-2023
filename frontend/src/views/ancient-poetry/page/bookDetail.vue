@@ -51,7 +51,7 @@ const getAncientPoetryDetail = async () => {
 }
 getAncientPoetryDetail()
 const goIndex = () => {
-  router.push({path: '/ancient/books'})
+  router.push({path: '/library/books'})
 }
 
 const newReviewFormRef = ref(null);

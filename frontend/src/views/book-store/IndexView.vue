@@ -194,7 +194,7 @@ const addTask = () => {
 const router = useRouter()
 const linkFun = (value: any) => {
   console.log(value)
-  router.push({ path: "/book-store/books/communities", query: { id: value.id, name: value.title, ...params.value } })
+  router.push({ path: "/community/tips", query: { id: value.id, name: value.title, ...params.value } })
 }
 
 
@@ -253,7 +253,7 @@ const delRow = (value: any) => {
   <div class="scan-manage_layout">
     <div class="form-container">
       <div class="form-title">
-        <h4>圈子相关</h4>
+        <h4>知音阁</h4>
         <div class="button-box">
           <el-button type="primary" @click="handleSearch" icon="Search">查询</el-button>
           <el-button type="primary" @click="reSearch" plain icon="RefreshLeft">重置</el-button>

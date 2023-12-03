@@ -7,7 +7,7 @@
     </div>
     <div class="mobile" v-else>
       <img src="@/assets/img/login-box-bg.svg" alt="">
-      <h3>星域平台管理系统</h3>
+      <h3>书缘社</h3>
       <p>当前访问地址为PC端，手机端访问方式</p>
       <p><a href="http://www.chensc.com.cn/mobile">http://www.chensc.com.cn/mobile</a></p>
     </div>

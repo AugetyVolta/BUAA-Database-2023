@@ -227,8 +227,9 @@ const userLogin = () => {
                  active-action-icon="Moon" inactive-action-icon="Sunny"/>
       <div class="form-layout" :style="mainStore.isDark ? '' : 'background: #fff;'">
         <h3 class="system-title">
-          星域平台管理系统
-          <img src="@/assets/img/logo.png" alt="" class="logo">
+          书缘社
+          <img v-if="mainStore.isDark" src="@/assets/img/logo.png" alt="" class="logo1">
+          <img v-if="!mainStore.isDark" src="@/assets/img/logo.png" alt="" class="logo">
         </h3>
         <el-form :label-position="'top'" :model="loginForm">
           <el-form-item label="登录账号：">
@@ -280,7 +281,6 @@ const userLogin = () => {
         </template>
       </el-dialog>
     </div>
-    <p class="filings-number"><a href="https://beian.miit.gov.cn">网站备案/许可证编号：黔ICP备2023014986号</a></p>
   </div>
 </template>
 
@@ -361,7 +361,7 @@ const userLogin = () => {
     width: 400px;
     right: -30%;
     top: 0%;
-    transform: translateY(40%);
+    transform: translateY(60%);
     border: solid 1px #4c4d4f;
     box-shadow: inset 0 0 5px #4c4d4f;
     padding: 20px 20px 10px 20px;
@@ -380,6 +380,14 @@ const userLogin = () => {
         top: -10px;
         width: 66px;
         height: 66px;
+      }
+      .logo1 {
+        position: absolute;
+        right: 10px;
+        top: -10px;
+        width: 66px;
+        height: 66px;
+        filter: invert(100%);
       }
     }
 

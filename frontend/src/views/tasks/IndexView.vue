@@ -229,7 +229,7 @@ const delRow = (value: any) => {
   <div class="scan-manage_layout">
     <div class="form-container">
       <div class="form-title">
-        <h4>任务管理</h4>
+        <h4>静审轩</h4>
       </div>
     </div>
     <el-row>

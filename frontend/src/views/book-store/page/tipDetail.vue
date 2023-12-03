@@ -4,7 +4,7 @@
 <template>
   <div class="back">
       <el-button class="circleBtn" type="primary"
-        @click="router.push({ path: '/book-store/books', query: { ...route.query } })" plain icon="ArrowLeft" round>
+        @click="router.push({ path: '/community/communities', query: { ...route.query } })" plain icon="ArrowLeft" round>
       </el-button>
       <b>{{ quanziName }}</b>
     </div>
@@ -212,7 +212,7 @@ const userAddTagToGroup = () => {
 };
 
 const intoPost = (id) => {
-  router.push({ path: "/book-store/books/tips", query: { id: id,} })
+  router.push({ path: "/community/tip/comments", query: { id: id,} })
   // Navigation logic to a post page
 };
 
