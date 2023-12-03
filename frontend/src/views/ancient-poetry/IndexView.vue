@@ -168,6 +168,7 @@ const digBook = () => {
 }
 let editDialogVisible = ref(false)
 let uploadDialogVisible = ref(false)
+let changeDialogVisible = ref(false)
 
 interface TaskEditFormType {
   name: string
@@ -357,6 +358,27 @@ const downLoadBookInfo = () => {
   })
 }
 
+//修改图书信息
+const confirmChange = () => {
+  booksApi.editBook(dataEditForm.value).then((res: any) => {
+    if (res.data.code == 200) {
+      ElMessage.success("修改成功")
+      changeDialogVisible.value = false
+      fetchTableData()
+    } else if (res.data.code == 400) {
+      ElMessage.error("无权限修改该图书")
+      changeDialogVisible.value = false
+    }
+  })
+}
+
+const editRow = (value: any) => {
+  changeDialogVisible.value = true
+  dataEditForm.value.name = value.title
+  dataEditForm.value.author = value.author
+  return
+}
+
 </script>
 <template>
   <div>
@@ -399,6 +421,7 @@ const downLoadBookInfo = () => {
     <div class="table-box">
       <TableUnit :list="list" :columns="columns" @linkFun="linkFun">
         <template v-slot="record">
+          <el-button plain size="small" icon="Edit" type="primary" @click="editRow(record.record)"></el-button>
           <el-button plain size="small" icon="Delete" type="danger" @click="delRow(record.record)"></el-button>
         </template>
       </TableUnit>
@@ -472,6 +495,40 @@ const downLoadBookInfo = () => {
         <span class="dialog-footer">
           <el-button @click="uploadDialogVisible = false">取 消</el-button>
           <el-button type="primary" @click="confirmUpload()">确 定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+    <el-dialog title="编辑书籍" top="6vh" v-model="changeDialogVisible" width="50%">
+      <div>
+        <el-form label-width="120px" :model="dataEditForm" ref="ruleFormRef">
+          <el-form-item label="书籍标签">
+            <el-select clearable v-model="dataEditForm.tag" multiple>
+              <el-option v-for="(item, index) in tagOption" :label="item" :value="item"
+                         :key="index + 'tag'"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="书籍简介">
+            <el-input :rows="5" type="textarea" v-model="dataEditForm.introduction"></el-input>
+          </el-form-item>
+          <el-form-item label="上传图片">
+            <el-upload
+                action="http://10.192.187.233:8000/api/upload"
+                :before-upload="beforeUpload"
+                :on-success="handleUploadSuccess"
+                :on-remove="handleRemove"
+                :on-error="handleUploadError"
+                :file-list="fileList"
+                list-type="picture-card"
+                :auto-upload="true">
+              <i class="el-icon-plus"></i>
+            </el-upload>
+          </el-form-item>
+        </el-form>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="changeDialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="confirmChange()">确 定</el-button>
         </span>
       </template>
     </el-dialog>

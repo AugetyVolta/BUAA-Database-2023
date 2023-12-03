@@ -250,6 +250,41 @@ def delete_book(request):
     return JsonResponse(res)
 
 
+def edit_book(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            if data.get('user_id') == 1:
+                book = Book.objects.get(name=data.get('name'), author=data.get('author'))
+                relations = BookLabelRelation.objects.filter(book=book)
+                tags = data.get('tag')
+                if len(tags) != 0:
+                    # 删除原来的tag
+                    for relation in relations:
+                        relation.delete()
+                    # 设置新tag
+                    for tag in tags:
+                        label = Label.objects.get(content=tag)
+                        newRelation = BookLabelRelation(book=book, label=label)
+                        newRelation.save()
+                # 设置新introduction和pic_url
+                book.description = data.get('introduction') if data.get('introduction') != '' else book.description
+                book.pic_url = data.get('pic_url') if data.get('pic_url') != '' else book.pic_url
+                book.save()
+                res["code"] = 200
+                res["message"] = "success"
+            else:
+                res["code"] = 400
+                res["message"] = "fail"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：修改书籍失败" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
 def getBookList(request):
     res = {"code": 400, "message": "", "data": None, "total": 0}
     try:
@@ -751,6 +786,7 @@ def get_tipList(request):
             res['data'].append(date_item)
             date_item = {"id": "", "title": "", "author": "", "content": "", "supported": 0, "unsupported": 0,
                          "commentNum": 0, "postTime": "", 'exactPostTime': ""}
+        res['data'] = sorted(res['data'], key=lambda x: x["exactPostTime"], reverse=True)
         res["code"] = 200
         res["message"] = "success"
     except Exception as e:
@@ -922,10 +958,11 @@ def delete_comment(request):
 
 
 def get_commentList(request):
-    res = {"code": 400, "message": "", "data": None}
+    res = {"code": 400, "message": "", "data": None, "title": "", "community_id": 0}
     try:
         tip_id = request.GET.get('id')
         tip = Tip.objects.get(id=tip_id)
+        res['community_id'] = tip.community.id
         comments = Comment.objects.filter(tip=tip).order_by('id')
         res['data'] = []
         data_item = {'id': 0, 'userName': "", "text": "", "date": ""}
@@ -937,6 +974,8 @@ def get_commentList(request):
             data_item['date'] = time.split('.')[0]
             res['data'].append(data_item)
             data_item = {'id': 0, 'userName': "", "text": "", "date": ""}
+        res['data'] = sorted(res['data'], key=lambda x: x["date"], reverse=True)
+        res['title'] = tip.title
         res["code"] = 200
         res["message"] = "success"
     except Exception as e:

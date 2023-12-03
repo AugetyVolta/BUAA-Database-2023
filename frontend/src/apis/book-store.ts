@@ -61,6 +61,9 @@ export const booksApi = {
     addBook(params) {
         return axios.post('/api/add_book', params)
     },
+    editBook(params) {
+        return axios.post('/api/edit_book', params)
+    },
     uploadBooks(params) {
         return axios.post('/api/upload_book', params)
     },
