@@ -735,7 +735,7 @@ def get_tipList(request):
         res['topic'] = community.topic
         date_item = {"id": "", "title": "", "author": "", "content": "", "supported": 0, "unsupported": 0,
                      "commentNum": 0, "postTime": "", 'exactPostTime': ""}
-        tips = Tip.objects.filter(community=community).order_by('id')
+        tips = Tip.objects.filter(community=community, state="已通过").order_by('id')
         for tip in tips:
             date_item['id'] = tip.id
             date_item['title'] = tip.title
@@ -756,6 +756,120 @@ def get_tipList(request):
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：" + str(e)
+    return JsonResponse(res)
+
+
+# 获取任务
+def get_task(request):
+    res = {"code": 400, "message": "", "data": None, "total": 0}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            start_position = (int(data.get('page')) - 1) * 10
+            count_to_fetch = int(data.get('limit'))
+            res['data'] = []
+            user = User.objects.get(id=data.get('user_id'))
+            date_item = {"id": 0, "time": "", "title": "", "applier": "", "content": "", "status": ""}
+            communities = OwnedCommunity.objects.filter(user=user).values('community')
+            for community in communities:
+                community = Community.objects.get(id=community['community'])
+                tips = Tip.objects.filter(community=community)
+                for tip in tips:
+                    time = str(tip.create_time)
+                    date_item['id'] = tip.id
+                    date_item['time'] = time.split('.')[0]
+                    date_item['title'] = tip.title
+                    date_item['applier'] = tip.user.nickname
+                    date_item['content'] = tip.content
+                    date_item['status'] = "待办" if tip.state == '待审核' else "完成"
+                    res['data'].append(date_item)
+                    date_item = {"id": 0, "time": "", "applier": "", "content": "", "status": ""}
+            res['data'] = sorted(res['data'], key=lambda x: (x["status"] == "待办", x["time"]), reverse=True)
+            res['total'] = len(res['data'])
+            res['data'] = res['data'][start_position:start_position + count_to_fetch]
+            res["code"] = 200
+            res["message"] = "success"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+def acceptTip(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            tip = Tip.objects.get(id=data.get('tip_id'))
+            if tip.state == '待审核':
+                tip.state = "已通过"
+                tip.save()
+                res["code"] = 200
+                res["message"] = "success"
+            else:
+                res["code"] = 400
+                res["message"] = "success"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+def refuseTip(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            tip = Tip.objects.get(id=data.get('tip_id'))
+            if tip.state == '待审核':
+                tip.state = "驳回"
+                tip.save()
+                res["code"] = 200
+                res["message"] = "success"
+            else:
+                res["code"] = 400
+                res["message"] = "fail"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+def get_tip_status(request):
+    res = {"code": 400, "message": "", "data": None, "total": 0}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            start_position = (int(data.get('page')) - 1) * 10
+            count_to_fetch = int(data.get('limit'))
+            res['data'] = []
+            user = User.objects.get(id=data.get('user_id'))
+            tips = Tip.objects.filter(user=user)
+            date_item = {"time": "", "title": "", "content": "", "status": ""}
+            for tip in tips:
+                time = str(tip.create_time)
+                date_item['time'] = time.split('.')[0]
+                date_item['title'] = tip.title
+                date_item['content'] = tip.content
+                date_item['status'] = tip.state
+                res['data'].append(date_item)
+                date_item = {"time": "", "title": "", "content": "", "status": ""}
+            res['data'] = sorted(res['data'], key=lambda x: x["time"], reverse=True)
+            res['total'] = len(res['data'])
+            res['data'] = res['data'][start_position:start_position + count_to_fetch]
+            res["code"] = 200
+            res["message"] = "success"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
     return JsonResponse(res)
 
 
