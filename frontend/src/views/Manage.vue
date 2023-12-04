@@ -132,10 +132,11 @@ const confirmEdit = async () => {
     }
   })
 }
-
+//只有拥有最高权限的管理员才能进入
+const privilege = userData.value.privilege
 </script>
 <template>
-  <div class="scan-manage_layout">
+  <div v-if="privilege==1" class="scan-manage_layout">
     <div class="form-container">
       <div class="form-title">
         <h4>用户管理</h4>
