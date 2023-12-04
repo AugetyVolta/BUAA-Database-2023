@@ -14,3 +14,11 @@ export function  getRecommendedBooks() {
 export function getIdOfBook(param) {
   return axios.post(`/api/getIdOfBook`, param)
 }
+
+export function getTipsByFavor() {
+  return axios.get(`/api/getTipsByFavor`)
+}
+
+export function getTipsByComments() {
+  return axios.get(`/api/getTipsByComments`)
+}
