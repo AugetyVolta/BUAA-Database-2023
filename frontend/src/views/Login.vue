@@ -120,7 +120,8 @@ interface userType {
   password: string,
   age: null | number,
   gender: string,
-  profilePhoto: number
+  profilePhoto: number,
+  privilege: number
 }
 
 const userForm = reactive<userType>({
@@ -129,7 +130,8 @@ const userForm = reactive<userType>({
   password: "",
   age: null,
   gender: "",
-  profilePhoto: 1
+  profilePhoto: 1,
+  privilege: 3
 })
 
 const checkAccount = (rule: any, value: any, callback: any) => {
@@ -381,6 +383,7 @@ const userLogin = () => {
         width: 66px;
         height: 66px;
       }
+
       .logo1 {
         position: absolute;
         right: 10px;

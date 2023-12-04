@@ -1,6 +1,7 @@
 import {createRouter, createWebHashHistory, createWebHistory, RouteRecordRaw} from 'vue-router'
 import {ElNotification} from 'element-plus'
 import MainView from '@/layout/indexView.vue'
+import {reactive, ref} from "vue/dist/vue";
 
 const hidden: boolean = true
 
@@ -140,6 +141,15 @@ const routes: Array<RouteRecordRaw> = [
 
             },
             {
+                path: '/user-manager',
+                name: 'manage',
+                meta: {
+                    title: "用户管理",
+                    icon: "Management"
+                },
+                component: () => import('@/views/Manage.vue')
+            },
+            {
                 path: '/user-center',
                 name: 'UserCenter',
                 meta: {
@@ -160,11 +170,10 @@ const routes: Array<RouteRecordRaw> = [
 
 const router = createRouter({
     history: createWebHashHistory(process.env.BASE_URL),
-    routes
+    routes: routes
 })
+
 router.beforeEach((to, from, next) => {
-    //console.log(localStorage.getItem("token"))
-    console.log(to.path)
     if (!localStorage.getItem("token") && to.path !== '/login') {
         next("/login");
         ElNotification.error({
@@ -176,5 +185,6 @@ router.beforeEach((to, from, next) => {
         next()
     }
 });
+
 
 export default router

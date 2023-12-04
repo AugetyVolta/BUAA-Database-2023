@@ -86,7 +86,7 @@ def user_login(request):
                 res["code"] = 200
                 res["message"] = "success"
                 user_data = {'id': user['id'], 'account': user['account'], 'nickname': user['nickname'],
-                             'gender': user['gender'], 'age': user['age']}
+                             'gender': user['gender'], 'age': user['age'], "privilege": user['privilege']}
                 response_data = {"user_data": user_data, "token": user_data}
                 res["data"] = response_data
                 print('-------------------user_login-------------------')
@@ -97,6 +97,62 @@ def user_login(request):
     except Exception as e:
         res["message"] = "服务器错误，错误原因：" + str(e)
         res["code"] = 500
+    return JsonResponse(res)
+
+
+def get_userList(request):
+    res = {"code": 400, "message": "", "data": None, "total": 0}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            start_position = (int(data.get('page')) - 1) * 10
+            count_to_fetch = int(data.get('limit'))
+            res['data'] = []
+            date_item = {"id": "", "account": "", "nickname": "", "privilege": 3}
+            if data.get('id'):
+                res['total'] = User.objects.filter(id=data.get('id'), account__icontains=data.get('account'),
+                                                   nickname__icontains=data.get('nickname')).count()
+                users = User.objects.filter(id=data.get('id'), account__icontains=data.get('account'),
+                                            nickname__icontains=data.get('nickname')).order_by('id')[
+                        start_position:start_position + count_to_fetch]
+            else:
+                res['total'] = User.objects.filter(account__icontains=data.get('account'),
+                                                   nickname__icontains=data.get('nickname')).count()
+                users = User.objects.filter(account__icontains=data.get('account'),
+                                            nickname__icontains=data.get('nickname')).order_by('id')[
+                        start_position:start_position + count_to_fetch]
+            for user in users:
+                date_item['id'] = user.id
+                date_item['account'] = user.account
+                date_item['nickname'] = user.nickname
+                date_item['privilege'] = user.privilege
+                res['data'].append(date_item)
+                date_item = {"id": "", "account": "", "nickname": "", "privilege": 3}
+            res["code"] = 200
+            res["message"] = "success"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+def modify_userPrivilege(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            user = User.objects.get(id=data.get('user_id'))
+            user.privilege = data.get('privilege')
+            user.save()
+            res["code"] = 200
+            res["message"] = "success"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
     return JsonResponse(res)
 
 
@@ -630,7 +686,7 @@ def delete_community(request):
             community = Community.objects.get(title=data.get('name'))
             user = User.objects.get(id=data.get("user_id"))
             ownedCommunity = OwnedCommunity.objects.filter(user=user, community=community)
-            if ownedCommunity:
+            if ownedCommunity or user.privilege <= 2:
                 community.delete()
                 res["code"] = 200
                 res["message"] = "success"
@@ -737,10 +793,11 @@ def delete_tip(request):
             data = json.loads(request.body)
             tip_id = data.get('tip_id')
             user_id = data.get('user_id')
+            user = User.objects.get(id=user_id)
             tip = Tip.objects.get(id=tip_id)
             community = tip.community
             community_own = OwnedCommunity.objects.get(community=community)
-            if tip.user.id == user_id or user_id == community_own.user.id:
+            if tip.user.id == user_id or user_id == community_own.user.id or user.privilege <= 2:
                 tip.delete()
                 res["code"] = 200
                 res["message"] = "success"
@@ -961,11 +1018,12 @@ def delete_comment(request):
         try:
             data = json.loads(request.body)
             user_id = data.get('user_id')
+            user = User.objects.get(id=user_id)
             comment = Comment.objects.get(id=data.get('comment_id'))
             post_user_id = comment.post_user.id
             tip_owner_id = comment.tip.user.id
             community_owner_id = OwnedCommunity.objects.get(community=comment.tip.community).user.id
-            if user_id == post_user_id or user_id == tip_owner_id or user_id == community_owner_id:
+            if user_id == post_user_id or user_id == tip_owner_id or user_id == community_owner_id or user.privilege <= 2:
                 comment.delete()
                 res["code"] = 200
                 res["message"] = "success"

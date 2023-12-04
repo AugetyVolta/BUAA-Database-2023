@@ -17,7 +17,8 @@ interface userType {
   account: string,
   nickname: string,
   age: null | number,
-  gender: string
+  gender: string,
+  privilege: number
 }
 
 const userForm = reactive<userType>({
@@ -25,6 +26,7 @@ const userForm = reactive<userType>({
   nickname: "",
   age: null,
   gender: "",
+  privilege: 3
 })
 
 const userData = ref(localUserData && localUserData !== 'undefined' ? JSON.parse(localUserData as string) : userForm)
