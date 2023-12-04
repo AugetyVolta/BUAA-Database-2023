@@ -2,6 +2,9 @@
 import { onMounted, watch, computed, ref, PropType } from 'vue';
 import * as echarts from 'echarts';
 import { useMainStore } from '@/store/index';
+import {useRoute, useRouter} from "vue-router";
+import {getIdOfBook} from "@/apis/home";
+const router = useRouter()
 const mainStore = useMainStore()
 const props = defineProps({
   countData: { //表格数据
@@ -13,6 +16,9 @@ const props = defineProps({
     default: () => []
   },
 })
+const linkFun = (id) => {
+  router.push({path: '/library/books/book', query: {id: id}})
+}
 let dark = computed(() => mainStore.isDark)
 watch(dark, (_, next) => {
   initCharts(next)
@@ -28,11 +34,17 @@ const initCharts = (isDark: boolean) => {
   }
 
   myChart = echarts.init(lineCharts.value, chartsTheme);
-
+  myChart.on('click', async (params: any) => {
+    const bookName = params.name;
+    //console.log(params.data);
+    const data = await getIdOfBook({"bookName": bookName});
+    //console.log(data)
+    linkFun(data.data.data)
+  });
   // option
   option = {
     title: {
-      text: '朝代文章总量统计（篇）',
+      text: '十佳图书榜',
       top: 10,
       left: 10,
     },
@@ -40,8 +52,8 @@ const initCharts = (isDark: boolean) => {
       trigger: 'axis',
       formatter(params: any) {
         return `
-        朝代：${params[0].name} </br> 
-        文章总量：${params[0].value}篇
+        书名：${params[0].name} </br>
+        综合评分：${params[0].value}
         `;
       },
       axisPointer: {

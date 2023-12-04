@@ -2,7 +2,7 @@
 <script lang="ts" setup>
 import {ref, onUnmounted, onMounted} from 'vue';
 import { ElLoading } from 'element-plus';
-import { getPoetryCountTotal } from '@/apis/home'
+import { getPoetryCountTotal, getRecommendedBooks } from '@/apis/home'
 import AuthorCharts from '@/components/Echarts/AuthorCharts.vue';
 import PieCharts from '@/components/Echarts/PieCharts.vue';
 import DynastyCharts from '@/components/Echarts/DynastyCharts.vue';
@@ -19,19 +19,23 @@ let authorByDynastyCountData = ref({
   category: [],
 })
 const getEchartsData = async () => {
-  const { data } = await getPoetryCountTotal()
-  data.dynasty_poems.forEach((element: any) => {
-    dynastyCountData.value.countData.push(element.poem_count)
-    dynastyCountData.value.category.push(element.dynasty)
-  });
-  data.author_poems.forEach((element: any) => {
-    authorCountData.value.countData.push({ name: element.author, value: element.poem_count })
-    authorCountData.value.category.push(element.author)
-  });
-  data.poet_count_author_by_dynasty.forEach((element: any) => {
-    authorByDynastyCountData.value.category.push(element.dynasty)
-    authorByDynastyCountData.value.countData.push(element.author_count)
-  });
+  const data1 = await getRecommendedBooks()
+  console.log(data1)
+  dynastyCountData.value.countData = data1.data.data.bookScore
+  dynastyCountData.value.category = data1.data.data.bookName
+  // const { data } = await getPoetryCountTotal()
+  // data.dynasty_poems.forEach((element: any) => {
+  //   dynastyCountData.value.countData.push(element.poem_count)
+  //   dynastyCountData.value.category.push(element.dynasty)
+  // });
+  // data.author_poems.forEach((element: any) => {
+  //   authorCountData.value.countData.push({ name: element.author, value: element.poem_count })
+  //   authorCountData.value.category.push(element.author)
+  // });
+  // data.poet_count_author_by_dynasty.forEach((element: any) => {
+  //   authorByDynastyCountData.value.category.push(element.dynasty)
+  //   authorByDynastyCountData.value.countData.push(element.author_count)
+  // });
 }
 let timer: null | any = null
 let previousHeight: number = 0
