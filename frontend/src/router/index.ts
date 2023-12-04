@@ -150,6 +150,15 @@ const routes: Array<RouteRecordRaw> = [
                 component: () => import('@/views/Manage.vue')
             },
             {
+                path: '/user-log',
+                name: 'log',
+                meta: {
+                    title: "用户日志",
+                    icon: "List"
+                },
+                component: () => import('@/views/UserLog.vue')
+            },
+            {
                 path: '/user-center',
                 name: 'UserCenter',
                 meta: {

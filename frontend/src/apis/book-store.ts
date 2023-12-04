@@ -100,6 +100,9 @@ export const userApi = {
     getUserList(params = {}) {
         return axios.post('/api/get_userList', params)
     },
+    getUserLogList(params = {}) {
+        return axios.post('/api/get_userLogList', params)
+    },
     modify_userPrivilege(params: {}) {
         return axios.post('/api/modify_userPrivilege', params)
     }

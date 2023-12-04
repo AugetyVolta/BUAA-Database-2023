@@ -5,34 +5,9 @@ import pandas as pd
 from django.db.models import Avg
 from django.http import HttpResponse, JsonResponse
 import json
-from django.shortcuts import render
-from django.views.decorators.http import require_http_methods
-from rest_framework import generics
-
 from backend.DigBooks import dig_books
 from backend.models import Book, Community, User, Photo, Favourite, Score, BookComment, UserBookRelation, Tip, Label, \
-    BookLabelRelation, OwnedCommunity, Comment
-from django.core import serializers
-
-
-# Create your views here.
-# # 添加照片
-# def add_photo(request):
-#     res = {"code": 400, "message": "", "data": None}
-#     if request.method == "POST":
-#         try:
-#             data = json.loads(request.body)
-#             photo = Photo(path=data.get('path'))
-#             photo.save()
-#             res["code"] = 200
-#             res["message"] = "success"
-#             print('-------------------add_photo-------------------')
-#         except Exception as e:
-#             res["code"] = 500
-#             res["message"] = "服务器错误：图片创建失败" + str(e)
-#     else:
-#         res["message"] = "请使用POST方法"
-#     return JsonResponse(res)
+    BookLabelRelation, OwnedCommunity, Comment, UserLog
 
 
 # 创建用户
@@ -138,6 +113,65 @@ def get_userList(request):
     return JsonResponse(res)
 
 
+def get_userLogList(request):
+    res = {"code": 400, "message": "", "data": None, "total": 0}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            start_time = data.get('startTime')
+            end_time = data.get('endTime')
+            start_position = (int(data.get('page')) - 1) * 10
+            count_to_fetch = int(data.get('limit'))
+            res['data'] = []
+            date_item = {"logId": 0, "id": 0, "account": "", "time": "", "log": ""}
+            if data.get('id'):
+                user = User.objects.get(id=data.get('id'))
+                if start_time != '':
+                    logs = UserLog.objects.filter(user=user, create_time__range=(start_time, end_time)).order_by('id')[
+                           start_position:start_position + count_to_fetch]
+                    res['total'] = UserLog.objects.filter(user=user, create_time__range=(start_time, end_time)).count()
+                else:
+                    logs = UserLog.objects.filter(user=user).order_by('id')[
+                           start_position:start_position + count_to_fetch]
+                    res['total'] = UserLog.objects.filter(user=user).count()
+            elif data.get('account'):
+                user = User.objects.get(id=data.get('id'))
+                if start_time != '':
+                    logs = UserLog.objects.filter(user=user, create_time__range=(start_time, end_time)).order_by('id')[
+                           start_position:start_position + count_to_fetch]
+                    res['total'] = UserLog.objects.filter(user=user, create_time__range=(start_time, end_time)).count()
+                else:
+                    logs = UserLog.objects.filter(user=user).order_by('id')[
+                           start_position:start_position + count_to_fetch]
+                    res['total'] = UserLog.objects.filter(user=user).count()
+            else:
+                if start_time != '':
+                    logs = UserLog.objects.filter(create_time__range=(start_time, end_time)).order_by('id')[
+                           start_position:start_position + count_to_fetch]
+                    res['total'] = UserLog.objects.filter(create_time__range=(start_time, end_time)).count()
+                else:
+                    logs = UserLog.objects.all().order_by('id')[
+                           start_position:start_position + count_to_fetch]
+                    res['total'] = UserLog.objects.all().count()
+            for log in logs:
+                date_item['logId'] = log.id
+                date_item['id'] = log.user.id
+                date_item['account'] = log.user.account
+                time = str(log.create_time)
+                date_item['time'] = time.split('.')[0]
+                date_item['log'] = log.content
+                res['data'].append(date_item)
+                date_item = {"logId": 0, "id": 0, "account": "", "time": "", "log": ""}
+            res["code"] = 200
+            res["message"] = "success"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
 def modify_userPrivilege(request):
     res = {"code": 400, "message": "", "data": None}
     if request.method == "POST":
@@ -226,6 +260,24 @@ def add_book(request):
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：书籍添加失败" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+def getIdOfBook(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            bookName = data.get('bookName')
+            book = Book.objects.filter(name=bookName).first()
+            res['data'] = book.id
+            res["code"] = 200
+            res["message"] = "success"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误" + str(e)
     else:
         res["message"] = "请使用POST方法"
     return JsonResponse(res)
@@ -500,9 +552,9 @@ def downLoad_books(request):
                 data_item['title'] = book.name
                 data_item['author'] = book.author
                 data_item['introduction'] = book.description
-                data_item['score'] = '%.1f' % Score.objects.filter(book_id=book.id).aggregate(
+                data_item['score'] = '%.1f' % Score.objects.filter(book=book).aggregate(
                     Avg('score')).get(
-                    'score__avg') if Score.objects.filter(book_id=book.id) else 0
+                    'score__avg') if Score.objects.filter(book=book) else 0
                 data_item['liked_times'] = Favourite.objects.filter(book=book).count()
                 cache = pd.DataFrame(
                     {"id": [data_item['id']], "title": [data_item['title']], "author": [data_item['author']],
@@ -523,6 +575,50 @@ def downLoad_books(request):
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：" + str(e)
+    return JsonResponse(res)
+
+
+def getRecommendedBooks(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == "POST":
+        try:
+            books = Book.objects.all().order_by("id")
+            res['data'] = {"bookName": [], "bookScore": []}
+            book_data = []
+            all_like_times = Favourite.objects.all().count()
+            maxScore = -1
+            minScore = 9999999999999.0
+            data_item = {"id": 0, "title": "", "score": 0.0, "liked_times": 0, "cmp": 0.0}
+            for book in books:
+                data_item['id'] = book.id
+                data_item['title'] = book.name
+                data_item['score'] = float('%.1f' % Score.objects.filter(book_id=book.id).aggregate(
+                    Avg('score')).get(
+                    'score__avg') if Score.objects.filter(book_id=book.id) else 0.0)
+                data_item['liked_times'] = Favourite.objects.filter(book=book).count()
+                data_item['cmp'] = float(100 * data_item['score'] / 5.0 + 100 * data_item['liked_times'] / (
+                        all_like_times + 1))
+                if data_item['cmp'] > maxScore:
+                    maxScore = data_item['cmp']
+                if data_item['cmp'] < minScore:
+                    minScore = data_item['cmp']
+                book_data.append(data_item)
+                data_item = {"id": 0, "title": "", "score": 0.0, "liked_times": 0, "cmp": 0.0}
+            book_data = sorted(book_data, key=lambda x: x["cmp"], reverse=True)
+            for i in range(10):
+                if abs(maxScore - minScore) < 1e-3:
+                    score = 100.0
+                else:
+                    score = '%.1f' % ((book_data[i]["cmp"] - minScore) / (maxScore - minScore) * 100.0)
+                res['data']['bookName'].append(book_data[i]['title'])
+                res['data']['bookScore'].append(score)
+            res["code"] = 200
+            res["message"] = "success"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
     return JsonResponse(res)
 
 
@@ -702,24 +798,6 @@ def delete_community(request):
     return JsonResponse(res)
 
 
-# 获得圈子
-# def get_community(request):
-#     res = {"code": 400, "message": "", "data": None}
-#     try:
-#         data = {"name": "", 'introduction': "", "tag": [], 'add_date': ""}
-#         community = Community.objects.get(id=request.GET.get('community_id'))
-#         data['name'] = community.title
-#         data['introduction'] = community.topic
-#         data['add_date'] = community.create_time
-#         data['tag'] = ["dadads", "fdsfsdf"]
-#         res["code"] = 200
-#         res["message"] = "success"
-#         res['data'] = data
-#     except Exception as e:
-#         res["code"] = 500
-#         res["message"] = "服务器错误：" + str(e)
-#     return JsonResponse(res)
-
 # 获得圈子，带查找
 def get_communityList(request):
     res = {"code": 400, "message": "", "data": None, "total": 0}
@@ -867,6 +945,60 @@ def get_tipList(request):
             date_item = {"id": "", "title": "", "author": "", "content": "", "supported": 0, "unsupported": 0,
                          "commentNum": 0, "postTime": "", 'exactPostTime': ""}
         res['data'] = sorted(res['data'], key=lambda x: x["exactPostTime"], reverse=True)
+        res["code"] = 200
+        res["message"] = "success"
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误：" + str(e)
+    return JsonResponse(res)
+
+
+def getTipsByFavor(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        res['data'] = []
+        tips = Tip.objects.all().order_by('id')
+        data_item = {"rank": 0, "date": "", "nickname": "", "title": "", "favor": 0}
+        tmp = []
+        for tip in tips:
+            time = str(tip.create_time)
+            data_item['date'] = time.split(' ')[0]
+            data_item['nickname'] = tip.user.nickname
+            data_item['title'] = tip.title
+            data_item['favor'] = tip.support_times
+            tmp.append(data_item)
+            data_item = {"rank": 0, "date": "", "nickname": "", "title": "", "favor": 0}
+        tmp = sorted(tmp, key=lambda x: x['favor'], reverse=True)
+        for i in range(10):
+            tmp[i]['rank'] = i + 1
+            res['data'].append(tmp[i])
+        res["code"] = 200
+        res["message"] = "success"
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误：" + str(e)
+    return JsonResponse(res)
+
+
+def getTipsByComments(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        res['data'] = []
+        tips = Tip.objects.all().order_by('id')
+        data_item = {"rank": 0, "date": "", "nickname": "", "title": "", "comments": 0}
+        tmp = []
+        for tip in tips:
+            time = str(tip.create_time)
+            data_item['date'] = time.split(' ')[0]
+            data_item['nickname'] = tip.user.nickname
+            data_item['title'] = tip.title
+            data_item['comments'] = Comment.objects.filter(tip=tip).count()
+            tmp.append(data_item)
+            data_item = {"rank": 0, "date": "", "nickname": "", "title": "", "comments": 0}
+        tmp = sorted(tmp, key=lambda x: x['comments'], reverse=True)
+        for i in range(10):
+            tmp[i]['rank'] = i + 1
+            res['data'].append(tmp[i])
         res["code"] = 200
         res["message"] = "success"
     except Exception as e:

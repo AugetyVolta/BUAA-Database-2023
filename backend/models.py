@@ -116,3 +116,12 @@ class BookLabelRelation(models.Model):
     # 外键
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     label = models.ForeignKey(Label, on_delete=models.CASCADE)
+
+
+# 用户日志表
+class UserLog(models.Model):
+    id = models.AutoField(primary_key=True)
+    create_time = models.DateTimeField(verbose_name="创建时间", auto_now_add=True)
+    content = models.TextField(verbose_name="日志内容", blank=False)
+    # 外键
+    user = models.ForeignKey(User, on_delete=models.CASCADE)

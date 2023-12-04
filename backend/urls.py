@@ -6,12 +6,15 @@ urlpatterns = [
     path('add_user', views.add_user),
     path('check_user', views.check_user),
     path('get_userList', views.get_userList),
+    path('get_userLogList', views.get_userLogList),
     path('user_login', views.user_login),
     path('change_password', views.change_password),
     path('modify_userdata', views.modify_user),
     path('modify_userPrivilege', views.modify_userPrivilege),
     path('get_bookInfo', views.get_bookInfo),
     path('get_books', views.getBookList),
+    path('getIdOfBook', views.getIdOfBook),
+    path('getRecommendedBooks', views.getRecommendedBooks),
     path('get_bookDetailList', views.get_bookDetailList),
     path('add_book', views.add_book),
     path('upload_book', views.upload_book),
@@ -35,6 +38,8 @@ urlpatterns = [
     path('get_tip_status', views.get_tip_status),
     path('accept_tip', views.acceptTip),
     path('refuse_tip', views.refuseTip),
+    path('getTipsByFavor', views.getTipsByFavor),
+    path('getTipsByComments', views.getTipsByComments),
     path('get_task', views.get_task),
     path('add_comment', views.add_comment),
     path('delete_comment', views.delete_comment),
@@ -42,5 +47,4 @@ urlpatterns = [
     path('add_label', views.add_label),
     path('upload', views.upload),
     path('downLoad_books', views.downLoad_books)
-
 ]
