@@ -1,9 +1,8 @@
-
 <script lang="ts" setup>
 /* eslint-disable */
-import { ref, reactive, } from 'vue'
+import {ref, reactive,} from 'vue'
 
-import { ElMessage, ElMessageBox } from 'element-plus';
+import {ElMessage, ElMessageBox} from 'element-plus';
 import {
   taskList,
   othertaskList,
@@ -13,7 +12,9 @@ import {
 } from '@/apis/tasks'
 import PaginationUnit from '@/components/Table/PaginationUnit.vue'
 import TableUnit from '@/components/Table/TableUnit.vue'
+
 const localUserData = localStorage.getItem("user_data")
+
 interface userType {
   account: string,
   nickname: string,
@@ -48,7 +49,7 @@ const columns = reactive([
     title: '帖子标题',
     dataIndex: 'title',
     align: "center",
-    width:100
+    width: 100
   },
   {
     title: '发帖内容',
@@ -88,8 +89,8 @@ const otherColumns = reactive([
   {
     title: "帖子内容",
     dataIndex: "content",
-    width:120,
-    overflow:true,
+    width: 120,
+    overflow: true,
     align: "center"
   },
   {
@@ -111,7 +112,7 @@ let otherList = ref([])
 let otherTotal = ref<number>(0)
 
 let otherParams = ref({
-  page:1,
+  page: 1,
   limit: 10,
   user_id: userData.value.id
 })
@@ -177,9 +178,9 @@ const otherhandleCurrentChange = (val: number) => {
 // }
 
 const accept = async (value: any) => {
-  acceptPost({"tip_id": value.id}).then((res:any) => {
+  acceptPost({"tip_id": value.id, "id": userData.value.id}).then((res: any) => {
     if (res.data.code == 200) {
-       ElMessage.success("操作成功")
+      ElMessage.success("操作成功")
       fetchTableData()
       otherfetchTableData()
     } else {
@@ -189,9 +190,9 @@ const accept = async (value: any) => {
 }
 
 const refuse = async (value: any) => {
-  refusePost({"tip_id": value.id}).then((res:any) => {
+  refusePost({"tip_id": value.id, "id": userData.value.id}).then((res: any) => {
     if (res.data.code == 200) {
-       ElMessage.success("操作成功")
+      ElMessage.success("操作成功")
       fetchTableData()
       otherfetchTableData()
     } else {
@@ -202,25 +203,25 @@ const refuse = async (value: any) => {
 
 const delRow = (value: any) => {
   ElMessageBox.confirm(
-    '此操作将删除该条信息，是否继续?',
-    '提示',
-    {
-      confirmButtonText: '确认',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }
+      '此操作将删除该条信息，是否继续?',
+      '提示',
+      {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
   )
-    .then(() => {
-      deletetask(value.id).then((res: any) => {
-        if (res.code == 200) {
-          ElMessage({
-            type: 'success',
-            message: '删除成功',
-          })
-          fetchTableData()
-        }
+      .then(() => {
+        deletetask(value.id).then((res: any) => {
+          if (res.code == 200) {
+            ElMessage({
+              type: 'success',
+              message: '删除成功',
+            })
+            fetchTableData()
+          }
+        })
       })
-    })
 }
 
 
@@ -234,27 +235,34 @@ const delRow = (value: any) => {
     </div>
     <el-row>
       <el-col span="12">
-    <div class="table-box">
-      <TableUnit :list="list" :columns="columns">
-        <template v-slot="record">
-          <el-button plain size="small" type="primary" circle @click="accept(record.record)"><el-icon style="vertical-align: middle" size="large">
-      <Check/></el-icon></el-button>
-          <el-button plain size="small" type="danger" circle @click="refuse(record.record)"><el-icon style="vertical-align: middle" size="large">
-      <Close/></el-icon></el-button>
-        </template>
-      </TableUnit>
-      <PaginationUnit @handleCurrentChange="handleCurrentChange" @handleSizeChange="handleSizeChange" :total="total"
-        :currentPage="params.page">
-      </PaginationUnit>
-    </div>
+        <div class="table-box">
+          <TableUnit :list="list" :columns="columns">
+            <template v-slot="record">
+              <el-button plain size="small" type="primary" circle @click="accept(record.record)">
+                <el-icon style="vertical-align: middle" size="large">
+                  <Check/>
+                </el-icon>
+              </el-button>
+              <el-button plain size="small" type="danger" circle @click="refuse(record.record)">
+                <el-icon style="vertical-align: middle" size="large">
+                  <Close/>
+                </el-icon>
+              </el-button>
+            </template>
+          </TableUnit>
+          <PaginationUnit @handleCurrentChange="handleCurrentChange" @handleSizeChange="handleSizeChange" :total="total"
+                          :currentPage="params.page">
+          </PaginationUnit>
+        </div>
       </el-col>
-       <el-col span="12">
-    <div class="table-box">
-      <TableUnit :list="otherList" :columns="otherColumns"></TableUnit>
-      <PaginationUnit @handleCurrentChange="otherhandleCurrentChange" @handleSizeChange="otherhandleSizeChange" :total="otherTotal"
-        :currentPage="otherParams.page">
-      </PaginationUnit>
-    </div>
+      <el-col span="12">
+        <div class="table-box">
+          <TableUnit :list="otherList" :columns="otherColumns"></TableUnit>
+          <PaginationUnit @handleCurrentChange="otherhandleCurrentChange" @handleSizeChange="otherhandleSizeChange"
+                          :total="otherTotal"
+                          :currentPage="otherParams.page">
+          </PaginationUnit>
+        </div>
       </el-col>
     </el-row>
   </div>

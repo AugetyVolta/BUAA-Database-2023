@@ -7,6 +7,7 @@ urlpatterns = [
     path('check_user', views.check_user),
     path('get_userList', views.get_userList),
     path('get_userLogList', views.get_userLogList),
+    path('downloadUserLog', views.downloadUserLog),
     path('user_login', views.user_login),
     path('change_password', views.change_password),
     path('modify_userdata', views.modify_user),

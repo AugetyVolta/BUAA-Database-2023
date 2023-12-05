@@ -73,11 +73,13 @@ let params = ref({
 })
 
 interface TaskEditFormType {
+  id: number
   user_id: number
   privilege: number
 }
 
 let dataEditForm = ref<TaskEditFormType>({
+  id: userData.value.id,
   user_id: 0,
   privilege: 0
 })

@@ -10,6 +10,11 @@ from backend.models import Book, Community, User, Photo, Favourite, Score, BookC
     BookLabelRelation, OwnedCommunity, Comment, UserLog
 
 
+def log(user, content):
+    newLog = UserLog(user=user, content=content)
+    newLog.save()
+
+
 # 创建用户
 def add_user(request):
     res = {"code": 400, "message": "", "data": None}
@@ -25,6 +30,7 @@ def add_user(request):
             res["code"] = 200
             res["message"] = "success"
             print('-------------------add_user-------------------')
+            log(user, "register")
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：用户创建失败" + str(e)
@@ -43,6 +49,7 @@ def check_user(request):
             res['code'] = 200
         else:
             res['message'] = "用户已注册"
+        print('-------------------check_user-------------------')
     except Exception as e:
         res['message'] = '服务器错误：' + str(e)
         res['code'] = 500
@@ -65,6 +72,8 @@ def user_login(request):
                 response_data = {"user_data": user_data, "token": user_data}
                 res["data"] = response_data
                 print('-------------------user_login-------------------')
+                user = User.objects.get(account=data.get('account'))
+                log(user, "login")
             else:
                 res['message'] = "密码输入错误"
         else:
@@ -103,6 +112,7 @@ def get_userList(request):
                 date_item['privilege'] = user.privilege
                 res['data'].append(date_item)
                 date_item = {"id": "", "account": "", "nickname": "", "privilege": 3}
+            print('-------------------get_userList-------------------')
             res["code"] = 200
             res["message"] = "success"
         except Exception as e:
@@ -135,7 +145,7 @@ def get_userLogList(request):
                            start_position:start_position + count_to_fetch]
                     res['total'] = UserLog.objects.filter(user=user).count()
             elif data.get('account'):
-                user = User.objects.get(id=data.get('id'))
+                user = User.objects.get(account__icontains=data.get('account'))
                 if start_time != '':
                     logs = UserLog.objects.filter(user=user, create_time__range=(start_time, end_time)).order_by('id')[
                            start_position:start_position + count_to_fetch]
@@ -162,6 +172,73 @@ def get_userLogList(request):
                 date_item['log'] = log.content
                 res['data'].append(date_item)
                 date_item = {"logId": 0, "id": 0, "account": "", "time": "", "log": ""}
+            print('-------------------get_userLogList-------------------')
+            res["code"] = 200
+            res["message"] = "success"
+        except Exception as e:
+            res["code"] = 500
+            res["message"] = "服务器错误：" + str(e)
+    else:
+        res["message"] = "请使用POST方法"
+    return JsonResponse(res)
+
+
+def downloadUserLog(request):
+    res = {"code": 400, "message": "", "data": None}
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            start_time = data.get('startTime')
+            end_time = data.get('endTime')
+            date_item = {"logId": 0, "id": 0, "account": "", "time": "", "log": ""}
+            if data.get('id'):
+                user = User.objects.get(id=data.get('id'))
+                if start_time != '':
+                    logs = UserLog.objects.filter(user=user, create_time__range=(start_time, end_time)).order_by('id')
+                    res['total'] = UserLog.objects.filter(user=user, create_time__range=(start_time, end_time)).count()
+                else:
+                    logs = UserLog.objects.filter(user=user).order_by('id')
+                    res['total'] = UserLog.objects.filter(user=user).count()
+            elif data.get('account'):
+                user = User.objects.get(account__icontains=data.get('account'))
+                if start_time != '':
+                    logs = UserLog.objects.filter(user=user, create_time__range=(start_time, end_time)).order_by('id')
+                    res['total'] = UserLog.objects.filter(user=user, create_time__range=(start_time, end_time)).count()
+                else:
+                    logs = UserLog.objects.filter(user=user).order_by('id')
+                    res['total'] = UserLog.objects.filter(user=user).count()
+            else:
+                if start_time != '':
+                    logs = UserLog.objects.filter(create_time__range=(start_time, end_time)).order_by('id')
+                    res['total'] = UserLog.objects.filter(create_time__range=(start_time, end_time)).count()
+                else:
+                    logs = UserLog.objects.all().order_by('id')
+                    res['total'] = UserLog.objects.all().count()
+            result = pd.DataFrame()
+            for log in logs:
+                date_item['logId'] = log.id
+                date_item['id'] = log.user.id
+                date_item['account'] = log.user.account
+                time = str(log.create_time)
+                date_item['time'] = time.split('.')[0]
+                date_item['log'] = log.content
+                cache = pd.DataFrame(
+                    {"logId": [date_item['logId']], "user_id": [date_item['id']], "account": [date_item['account']],
+                     "time": [date_item['time']],
+                     "log": [date_item['log']]})
+                date_item = {"logId": 0, "id": 0, "account": "", "time": "", "log": ""}
+                result = pd.concat([result, cache])
+            print('-------------------downloadUserLog-------------------')
+            if data.get('id'):
+                filename = 'userLog_' + data.get('id') + '.xlsx'
+            elif data.get('account'):
+                user = User.objects.get(account__icontains=data.get('account'))
+                filename = 'userLog_' + user.id + '.xlsx'
+            else:
+                filename = 'userLog_all.xlsx'
+            result.head()
+            result.to_excel(f'media\\{filename}', index=False)
+            res['data'] = filename
             res["code"] = 200
             res["message"] = "success"
         except Exception as e:
@@ -178,10 +255,15 @@ def modify_userPrivilege(request):
         try:
             data = json.loads(request.body)
             user = User.objects.get(id=data.get('user_id'))
+            old = user.privilege
             user.privilege = data.get('privilege')
             user.save()
             res["code"] = 200
             res["message"] = "success"
+            print('-------------------modify_userPrivilege-------------------')
+            opUser = User.objects.get(id=data.get('id'))
+            user_data = {'account': user.account, "nickname": user.nickname}
+            log(opUser, f"change user {user_data} privilege from {old} to {user.privilege}")
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：" + str(e)
@@ -202,6 +284,8 @@ def change_password(request):
                 res['code'] = 200
                 res['message'] = '修改成功'
                 print('-------------------change_password-------------------')
+                log(User.objects.get(account=data["user_account"]),
+                    f"change password from {data['old_password']} to {data['new_password']}")
             else:
                 res['message'] = '原始密码错误'
         except Exception as e:
@@ -217,6 +301,7 @@ def modify_user(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            old_data = User.objects.filter(account=data['account']).values().first()
             User.objects.filter(account=data["account"]).update(nickname=data.get('nickname'),
                                                                 age=data.get('age'),
                                                                 gender=data.get('gender'))
@@ -225,6 +310,7 @@ def modify_user(request):
             res['message'] = '更新成功'
             res['data'] = res_data
             print('-------------------modify_user-------------------')
+            log(User.objects.get(account=data["account"]), f'change userInfo from {old_data} to {res_data}')
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：" + str(e)
@@ -254,6 +340,8 @@ def add_book(request):
                 res["code"] = 200
                 res["message"] = "success"
                 print('-------------------add_book-------------------')
+                book_data = Book.objects.filter(name=data.get('name'), author=data.get('author')).values().first()
+                log(user, f"add book {book_data}")
             else:
                 res["code"] = 400
                 res["message"] = "fail"
@@ -275,6 +363,7 @@ def getIdOfBook(request):
             res['data'] = book.id
             res["code"] = 200
             res["message"] = "success"
+            print('-------------------getIdOfBook-------------------')
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误" + str(e)
@@ -294,6 +383,7 @@ def check_book(request):
         else:
             res["code"] = 400
             res["message"] = "already exists"
+        print('-------------------check_book-------------------')
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误:检查书籍失败" + str(e)
@@ -315,6 +405,7 @@ def dig_book(request):
                 res["code"] = 200
                 res["message"] = "success"
                 print('-------------------dig_book-------------------')
+                log(user, f"dig book")
             else:
                 res["code"] = 400
                 res["message"] = "fail"
@@ -341,6 +432,8 @@ def upload_book(request):
                 res['data'] = len(book_data)
                 res["code"] = 200
                 res["message"] = "success"
+                print('-------------------upload_book-------------------')
+                log(user, f"upload {res['data']} books")
             else:
                 res["code"] = 400
                 res["message"] = "fail"
@@ -360,9 +453,14 @@ def delete_book(request):
             book = Book.objects.get(name=data.get('title'), author=data.get('author'))
             user = User.objects.get(id=data.get('user_id'))
             if user.privilege <= 2:
+                # 记录日志
+                book_data = Book.objects.filter(name=data.get('title'), author=data.get('author')).values().first()
+                log(user, f"delete book {book_data}")
+                # 删除书籍
                 book.delete()
                 res["code"] = 200
                 res["message"] = "success"
+                print('-------------------delete_book-------------------')
             else:
                 res["code"] = 400
                 res["message"] = "fail"
@@ -382,6 +480,7 @@ def edit_book(request):
             user = User.objects.get(id=data.get('user_id'))
             if user.privilege <= 2:
                 book = Book.objects.get(name=data.get('name'), author=data.get('author'))
+                old_data = Book.objects.filter(name=data.get('name'), author=data.get('author')).values().first()
                 relations = BookLabelRelation.objects.filter(book=book)
                 tags = data.get('tag')
                 if len(tags) != 0:
@@ -399,6 +498,9 @@ def edit_book(request):
                 book.save()
                 res["code"] = 200
                 res["message"] = "success"
+                print('-------------------edit_book-------------------')
+                book_data = Book.objects.filter(name=data.get('name'), author=data.get('author')).values().first()
+                log(user, f"edit book from {old_data} to {book_data}")
             else:
                 res["code"] = 400
                 res["message"] = "fail"
@@ -429,7 +531,7 @@ def getBookList(request):
             data_item = {"id": 0, "name": "", "pic_url": "", "description": ""}
         res["code"] = 200
         res["message"] = "success"
-
+        print('-------------------getBookList-------------------')
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：" + str(e)
@@ -470,6 +572,7 @@ def get_bookDetailList(request):
                          "tag": ""}
         res["code"] = 200
         res["message"] = "success"
+        print('-------------------get_bookDetailList-------------------')
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：" + str(e)
@@ -526,6 +629,7 @@ def get_bookInfo(request):
         res["message"] = "success"
         res["data"] = data
         print('-------------------get_bookInfo-------------------')
+        log(user, f"flip through book {book}")
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：" + str(e)
@@ -569,6 +673,8 @@ def downLoad_books(request):
             res['data'] = "书籍信息.xlsx"
             res["code"] = 200
             res["message"] = "success"
+            print('-------------------downLoad_books-------------------')
+            log(user, 'download books')
         else:
             res["code"] = 400
             res["message"] = "fail"
@@ -614,6 +720,7 @@ def getRecommendedBooks(request):
                 res['data']['bookScore'].append(score)
             res["code"] = 200
             res["message"] = "success"
+            print('-------------------getRecommendedBooks-------------------')
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误" + str(e)
@@ -638,6 +745,8 @@ def add_favourite(request):
             res["code"] = 200
             res["message"] = "success"
             print('-------------------add_favourite-------------------')
+            book_data = Book.objects.filter(id=data.get('book_id')).values().first()
+            log(user, f'collect book {book_data}')
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：收藏失败" + str(e)
@@ -661,6 +770,8 @@ def remove_favourite(request):
             res["code"] = 200
             res["message"] = "success"
             print('-------------------remove_favourite-------------------')
+            book_data = Book.objects.filter(id=data.get('book_id')).values().first()
+            log(user, f'cancel collect book {book_data}')
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：取消收藏失败" + str(e)
@@ -686,6 +797,8 @@ def add_score(request):
             res["code"] = 200
             res["message"] = "success"
             print('-------------------add_score-------------------')
+            book_data = Book.objects.filter(id=data.get('book_id')).values().first()
+            log(user, f"rate the book {book_data} {data.get('score')}")
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：评分失败" + str(e)
@@ -720,6 +833,9 @@ def add_bookComment(request):
             res["code"] = 200
             res["message"] = "success"
             print('-------------------add_bookComment-------------------')
+            book_data = Book.objects.filter(id=data.get('book_id')).values().first()
+            log(user,
+                f"Review book {book_data} with \"{data.get('reviewContent')}\" and score of {data.get('starRating')}")
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：书籍评价失败" + str(e)
@@ -739,6 +855,7 @@ def check_community(request):
             res['code'] = 200
         else:
             res['message'] = "圈子已被创建，请重新输入"
+        print('-------------------check_community-------------------')
     except Exception as e:
         res['message'] = '服务器错误：' + str(e)
         res['code'] = 500
@@ -756,9 +873,6 @@ def add_community(request):
                 topic=data.get('introduction'))
             community.save()
             # 加入到用户拥有圈子表中
-            print(data.get('user_id'))
-            print(data.get('name'))
-            print(data.get('introduction'))
             user = User.objects.get(id=data.get('user_id'))
             ownedCommunity = OwnedCommunity(user=user,
                                             community=community)
@@ -766,6 +880,8 @@ def add_community(request):
             res["code"] = 200
             res["message"] = "success"
             print('-------------------add_community-------------------')
+            community_data = {"name": data.get('name'), "introduction": data.get('introduction')}
+            log(user, f'create community {community_data}')
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：创建圈子失败" + str(e)
@@ -780,6 +896,7 @@ def delete_community(request):
         try:
             data = json.loads(request.body)
             community = Community.objects.get(title=data.get('name'))
+            community_data = {"name": community.title, "introduction": community.topic}
             user = User.objects.get(id=data.get("user_id"))
             ownedCommunity = OwnedCommunity.objects.filter(user=user, community=community)
             if ownedCommunity or user.privilege <= 2:
@@ -789,7 +906,8 @@ def delete_community(request):
             else:
                 res["code"] = 400
                 res["message"] = "fail"
-            print('-------------------add_community-------------------')
+            print('-------------------delete_community-------------------')
+            log(user, f'delete community {community_data}')
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：删除圈子失败" + str(e)
@@ -832,6 +950,7 @@ def get_communityList(request):
             data_item = {"id": 0, "name": "", 'introduction': "", 'add_date': ""}
         res["code"] = 200
         res["message"] = "success"
+        print('-------------------get_communityList-------------------')
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：" + str(e)
@@ -856,6 +975,9 @@ def add_tip(request):
             res["code"] = 200
             res["message"] = "success"
             print('-------------------add_tip-------------------')
+            tip_data = {'title': data.get('title'), "content": data.get('content')}
+            community_data = {"name": community.title, "introduction": community.topic}
+            log(user, f'post tip {tip_data} in community {community_data}')
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：创建帖子失败" + str(e)
@@ -879,6 +1001,10 @@ def delete_tip(request):
                 tip.delete()
                 res["code"] = 200
                 res["message"] = "success"
+                print('-------------------delete_tip-------------------')
+                tip_data = {'title': tip.title, "content": tip.content}
+                community_data = {"name": community.title, "introduction": community.topic}
+                log(user, f'delete tip {tip_data} in community {community_data}')
             else:
                 res["code"] = 400
                 res["message"] = "fail"
@@ -898,6 +1024,10 @@ def add_support(request):
         tip.save()
         res["code"] = 200
         res["message"] = "success"
+        print('-------------------add_support-------------------')
+        tip_data = {'title': tip.title, "content": tip.content}
+        user = User.objects.get(id=request.GET.get('id'))
+        log(user, f"favor tip {tip_data}")
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：点赞失败" + str(e)
@@ -912,6 +1042,10 @@ def add_unsupported(request):
         tip.save()
         res["code"] = 200
         res["message"] = "success"
+        print('-------------------add_unsupported-------------------')
+        tip_data = {'title': tip.title, "content": tip.content}
+        user = User.objects.get(id=request.GET.get('id'))
+        log(user, f"reject tip {tip_data}")
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：反对失败" + str(e)
@@ -947,6 +1081,7 @@ def get_tipList(request):
         res['data'] = sorted(res['data'], key=lambda x: x["exactPostTime"], reverse=True)
         res["code"] = 200
         res["message"] = "success"
+        print('-------------------get_tipList-------------------')
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：" + str(e)
@@ -974,6 +1109,7 @@ def getTipsByFavor(request):
             res['data'].append(tmp[i])
         res["code"] = 200
         res["message"] = "success"
+        print('-------------------getTipsByFavor-------------------')
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：" + str(e)
@@ -1001,6 +1137,7 @@ def getTipsByComments(request):
             res['data'].append(tmp[i])
         res["code"] = 200
         res["message"] = "success"
+        print('-------------------getTipsByComments-------------------')
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：" + str(e)
@@ -1037,6 +1174,7 @@ def get_task(request):
             res['data'] = res['data'][start_position:start_position + count_to_fetch]
             res["code"] = 200
             res["message"] = "success"
+            print('-------------------get_task-------------------')
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：" + str(e)
@@ -1051,11 +1189,15 @@ def acceptTip(request):
         try:
             data = json.loads(request.body)
             tip = Tip.objects.get(id=data.get('tip_id'))
+            user = User.objects.get(id=data.get('id'))
             if tip.state == '待审核':
                 tip.state = "已通过"
                 tip.save()
                 res["code"] = 200
                 res["message"] = "success"
+                print('-------------------acceptTip-------------------')
+                tip_data = {'title': tip.title, "content": tip.content}
+                log(user, f"accept tip {tip_data}")
             else:
                 res["code"] = 400
                 res["message"] = "success"
@@ -1073,11 +1215,15 @@ def refuseTip(request):
         try:
             data = json.loads(request.body)
             tip = Tip.objects.get(id=data.get('tip_id'))
+            user = User.objects.get(id=data.get('id'))
             if tip.state == '待审核':
                 tip.state = "驳回"
                 tip.save()
                 res["code"] = 200
                 res["message"] = "success"
+                print('-------------------refuseTip-------------------')
+                tip_data = {'title': tip.title, "content": tip.content}
+                log(user, f"refuse tip {tip_data}")
             else:
                 res["code"] = 400
                 res["message"] = "fail"
@@ -1113,6 +1259,7 @@ def get_tip_status(request):
             res['data'] = res['data'][start_position:start_position + count_to_fetch]
             res["code"] = 200
             res["message"] = "success"
+            print('------------------get_tip_status--------------------')
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：" + str(e)
@@ -1136,6 +1283,8 @@ def add_comment(request):
             res["code"] = 200
             res["message"] = "success"
             print('-------------------add_comment-------------------')
+            tip_data = {'title': tip.title, "content": tip.content}
+            log(post_user, f'review tip {tip_data} with {comment.content}')
         except Exception as e:
             res["code"] = 500
             res["message"] = "服务器错误：创建帖子评论失败" + str(e)
@@ -1156,9 +1305,12 @@ def delete_comment(request):
             tip_owner_id = comment.tip.user.id
             community_owner_id = OwnedCommunity.objects.get(community=comment.tip.community).user.id
             if user_id == post_user_id or user_id == tip_owner_id or user_id == community_owner_id or user.privilege <= 2:
+                owner = {'account': comment.post_user.account, "nickname": comment.post_user.nickname}
+                log(user, f'delete comment {comment.content} of user {owner}')
                 comment.delete()
                 res["code"] = 200
                 res["message"] = "success"
+                print('-------------------delete_comment-------------------')
             else:
                 res["code"] = 400
                 res["message"] = "fail"
@@ -1191,6 +1343,7 @@ def get_commentList(request):
         res['title'] = tip.title
         res["code"] = 200
         res["message"] = "success"
+        print('-------------------get_commentList-------------------')
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：获取评论列表失败" + str(e)
@@ -1251,6 +1404,7 @@ def upload(request):
                 f.write(content)
         res["code"] = 200
         res["message"] = "success"
+        print('-------------------upload-------------------')
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：上传图片失败" + str(e)

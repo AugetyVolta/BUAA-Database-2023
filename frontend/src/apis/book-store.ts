@@ -71,12 +71,12 @@ export const booksApi = {
         return axios.post(`/api/delete_book`, params)
     },
 
-    addSupport(id) {
-        return axios.get(`/api/add_support?tip_id=${id}`);
+    addSupport(id, user_id) {
+        return axios.get(`/api/add_support?tip_id=${id}&id=${user_id}`);
     },
 
-    addUnsupported(id) {
-        return axios.get(`/api/add_unsupported?tip_id=${id}`)
+    addUnsupported(id, user_id) {
+        return axios.get(`/api/add_unsupported?tip_id=${id}&id=${user_id}`)
     },
 
     deleteTipInfo(params) {
@@ -105,6 +105,9 @@ export const userApi = {
     },
     modify_userPrivilege(params: {}) {
         return axios.post('/api/modify_userPrivilege', params)
+    },
+    downloadUserLog(params: {}) {
+        return axios.post('/api/downloadUserLog', params)
     }
 }
 

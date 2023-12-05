@@ -4,8 +4,10 @@
              :collapse="mainStore.isCollapse" class="el-menu-vertical-demo scroll-bar" :default-active="route.path"
              :router="true">
       <div v-for="(item) in menuList">
-        <SubMenu v-if="item.name != 'manage' || item.name == 'manage' && privilege<=1 " :key="item.name"
-                 :item="item"></SubMenu>
+        <SubMenu
+            v-if="item.name != 'manage'&& item.name!='log' || item.name == 'manage' && privilege<=1 || item.name == 'log' && privilege<=1 "
+            :key="item.name"
+            :item="item"></SubMenu>
       </div>
     </el-menu>
   </div>

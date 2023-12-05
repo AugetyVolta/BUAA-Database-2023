@@ -7,6 +7,7 @@ import {booksApi, userApi} from '@/apis/book-store'
 import PaginationUnit from '@/components/Table/PaginationUnit.vue'
 import TableUnit from '@/components/Table/TableUnit.vue'
 import {useRouter, useRoute} from 'vue-router';
+import {da} from "element-plus/es/locale";
 
 const route = useRoute()
 const localUserData = localStorage.getItem("user_data")
@@ -35,31 +36,34 @@ const columns = reactive([
     title: "日志id",
     dataIndex: 'logId',
     align: "center",
-    width: 160
+    width: 240
   },
   {
     title: '用户id',
     dataIndex: 'id',
     align: "center",
-    width: 160
+    // width: 160
   },
   {
     title: '用户名',
     dataIndex: 'account',
     align: "center",
+    // width: 160
   },
   {
     title: '操作时间',
     dataIndex: 'time',
     align: "center",
+    // width: 160
   },
   {
     title: '用户操作',
     dataIndex: 'log',
     align: "center",
-    overflow: true
+    overflow: 'hidden',
   },
 ])
+
 
 const pickerOptions = ref({
   shortcuts: [
@@ -155,23 +159,31 @@ const reSearch = () => {
 
 const router = useRouter()
 
-// let editDialogVisible = ref(false)
-// const editRow = (value: any) => {
-//   editDialogVisible.value = true
-//   dataEditForm.value.user_id = value.id
-//   dataEditForm.value.privilege = value.privilege
-//   return
-// }
+interface TaskEditFormType {
+  user_id: number
+}
 
-// const confirmEdit = async () => {
-//   userApi.modify_userPrivilege(dataEditForm.value).then((res: any) => {
-//     if (res.data.code == 200) {
-//       ElMessage.success("修改成功")
-//       editDialogVisible.value = false
-//       fetchTableData()
-//     }
-//   })
-// }
+let dataEditForm = ref<TaskEditFormType>({
+  user_id: 0
+})
+
+const photoBaseUrl = 'http://10.192.187.233:9000/'
+const downLoadLog = async () => {
+  params.value.page = 1
+  if (searchDate.value && searchDate.value.length > 0) {
+    params.value.startTime = searchDate.value[0]
+    params.value.endTime = searchDate.value[1]
+  } else {
+    params.value.startTime = ''
+    params.value.endTime = ''
+  }
+  userApi.downloadUserLog(params.value).then((res: any) => {
+    if (res.data.code == 200) {
+      const fileUrl = photoBaseUrl + res.data.data
+      window.open(fileUrl, '_blank');
+    }
+  })
+}
 
 //只有拥有最高权限的管理员才能进入
 const privilege = userData.value.privilege
@@ -184,6 +196,7 @@ const privilege = userData.value.privilege
         <div class="button-box">
           <el-button type="primary" @click="handleSearch" icon="Search">查询</el-button>
           <el-button type="primary" @click="reSearch" plain icon="RefreshLeft">重置</el-button>
+          <el-button type="primary" @click="downLoadLog" plain icon="Download">导出日志</el-button>
         </div>
       </div>
       <div class="form-params">
@@ -210,22 +223,6 @@ const privilege = userData.value.privilege
                       :currentPage="params.page">
       </PaginationUnit>
     </div>
-    <!--    <el-dialog title="修改权限" top="6vh" v-model="editDialogVisible" width="50%">-->
-    <!--      <div>-->
-    <!--        <el-form label-width="120px" :model="dataEditForm">-->
-    <!--          <el-form-item label="用户权限">-->
-    <!--            <el-input size="large" type="number" v-model="dataEditForm.privilege" :min="1" :max="3"/>-->
-    <!--          </el-form-item>-->
-    <!--        </el-form>-->
-    <!--      </div>-->
-    <!--      <template #footer>-->
-    <!--        <span class="dialog-footer">-->
-    <!--          <el-button @click="editDialogVisible = false">取 消</el-button>-->
-    <!--          <el-button type="primary" @click="confirmEdit">确 定</el-button>-->
-    <!--        </span>-->
-    <!--      </template>-->
-
-    <!--    </el-dialog>-->
   </div>
 </template>
 <style lang="less" scoped></style>
