@@ -96,7 +96,7 @@ getEchartsData()
 <template>
   <div class="home-layout" v-if="isReload">
     <el-carousel indicator-position="outside" height="750px" pause-on-hover="true" interval="5000">
-    <el-carousel-item v-for="item in 4" :key="item">
+    <el-carousel-item v-for="item in 2" :key="item">
       <div v-if="item === 1">
          <el-row class="echart-box">
       <el-col :span="24">
@@ -107,15 +107,6 @@ getEchartsData()
     </el-row>
       </div>
       <div v-if="item === 2">
-         <el-row class="echart-box">
-      <el-col :span="24">
-        <AuthorCharts v-if="authorByDynastyCountData.category.length > 0" :category="authorByDynastyCountData.category"
-          :countData="authorByDynastyCountData.countData"></AuthorCharts>
-        <el-empty v-else description="图表数据为空" />
-      </el-col>
-    </el-row>
-      </div>
-      <div v-if="item === 3">
          <el-row class="echart-box">
       <el-col :span="24">
         <el-container style="height: 100%">
