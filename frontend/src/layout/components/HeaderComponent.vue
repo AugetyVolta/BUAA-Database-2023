@@ -1,24 +1,24 @@
 <script lang="ts" setup>
-import { ref, watch, } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { ElMessageBox, ElMessage } from 'element-plus'
-import { useDark, useFullscreen } from '@vueuse/core';
-import { useMainStore } from '@/store/index';
+import {ref, watch,} from 'vue';
+import {useRouter, useRoute} from 'vue-router';
+import {ElMessageBox, ElMessage} from 'element-plus'
+import {useDark, useFullscreen} from '@vueuse/core';
+import {useMainStore} from '@/store/index';
 /* eslint-disable */
 const mainStore = useMainStore()
 const isDark = useDark()
 const router = useRouter()
 const outLogin = (): void => {
   ElMessageBox.confirm(
-    '是否注销本次登录并清空所有登录信息?',
-    '注销提示',
-    {
-      confirmButtonText: '确认',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }
+      '是否注销本次登录并清空所有登录信息?',
+      '注销提示',
+      {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
   ).then(() => {
-    router.push({ path: "/login" })
+    router.push({path: "/login"})
     ElMessage({
       type: 'success',
       message: '登录信息已注销，已完成退出',
@@ -27,26 +27,34 @@ const outLogin = (): void => {
     removeItemList.forEach((item: string) => {
       localStorage.removeItem(item)
     })
-  })
+  }).catch(() => {})
 }
-const { toggle, } = useFullscreen()
+const {toggle,} = useFullscreen()
 const route = useRoute()
-let userData = ref({ nickname: "XXXX", account: "XXXX" })
+let userData = ref({nickname: "XXXX", account: "XXXX"})
 if (userData.value.nickname == 'XXXX') {
   setTimeout(() => {
     const userinfo = localStorage.getItem("user_data")
-    userData.value = userinfo && userinfo !== 'undefined' ? JSON.parse(userinfo as string) : { nickname: "XXXX", account: "XXXX" }
+    userData.value = userinfo && userinfo !== 'undefined' ? JSON.parse(userinfo as string) : {
+      nickname: "XXXX",
+      account: "XXXX"
+    }
   }, 200);
 }
-interface meat { path: string, title: string }
+
+interface meat {
+  path: string,
+  title: string
+}
+
 let pathArr: meat[] = []
 route.matched.forEach((item: any) => {
   let meta = item.meta
   let path: string = item.path
   if (meta.parentPath && meta.parent) {
-    pathArr.push({ path: meta.parentPath, title: meta.parent })
+    pathArr.push({path: meta.parentPath, title: meta.parent})
   }
-  pathArr.push({ path: path, title: meta.title })
+  pathArr.push({path: path, title: meta.title})
 })
 
 let routerArr = ref<any>(pathArr)
@@ -57,9 +65,9 @@ watch(route, (next, _) => {
     let meta = item.meta
     let path: string = item.path
     if (meta.parentPath && meta.parent) {
-      tempArr.push({ path: meta.parentPath, title: meta.parent })
+      tempArr.push({path: meta.parentPath, title: meta.parent})
     }
-    tempArr.push({ path: path, title: meta.title })
+    tempArr.push({path: path, title: meta.title})
   })
   routerArr.value = tempArr
 })
@@ -71,10 +79,10 @@ watch(route, (next, _) => {
     <div class="header-left-layout">
       <div class="trigger" @click="mainStore.onTrigger">
         <el-icon class="icon" v-if="mainStore.isCollapse">
-          <Expand />
+          <Expand/>
         </el-icon>
         <el-icon class="icon" v-else>
-          <Fold />
+          <Fold/>
         </el-icon>
       </div>
       <div>
@@ -92,20 +100,20 @@ watch(route, (next, _) => {
         {{ userData.account }} / {{ userData.nickname }}
       </el-button>
       <el-icon @click="toggle" class="icon right-icon">
-        <FullScreen />
+        <FullScreen/>
       </el-icon>
       <el-switch class="right-icon" size="large" @change="mainStore.changeTheme()"
-        style="--el-switch-on-color: #2c2c2c; --el-switch-off-color: #f2f2f2;" v-model="isDark" inline-prompt
-        active-action-icon="Moon" inactive-action-icon="Sunny" />
+                 style="--el-switch-on-color: #2c2c2c; --el-switch-off-color: #f2f2f2;" v-model="isDark" inline-prompt
+                 active-action-icon="Moon" inactive-action-icon="Sunny"/>
       <el-icon @click="outLogin" class="icon right-icon">
-        <SwitchButton />
+        <SwitchButton/>
       </el-icon>
     </div>
   </div>
 </template>
 <style lang='less' scoped>
 .list-move,
-/* 对移动中的元素应用的过渡 */
+  /* 对移动中的元素应用的过渡 */
 .list-enter-active,
 .list-leave-active {
   transition: all 0.5s ease;

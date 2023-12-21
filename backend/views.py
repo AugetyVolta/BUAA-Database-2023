@@ -1,12 +1,12 @@
+import json
 import os
-from datetime import datetime
-import jwt
+
 import pandas as pd
 from django.db.models import Avg
-from django.http import HttpResponse, JsonResponse
-import json
+from django.http import JsonResponse
+
 from backend.DigBooks import dig_books
-from backend.models import Book, Community, User, Photo, Favourite, Score, BookComment, UserBookRelation, Tip, Label, \
+from backend.models import Book, Community, User, Favourite, Score, BookComment, UserBookRelation, Tip, Label, \
     BookLabelRelation, OwnedCommunity, Comment, UserLog
 
 
