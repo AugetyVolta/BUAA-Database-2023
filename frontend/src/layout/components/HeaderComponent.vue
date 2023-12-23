@@ -99,9 +99,9 @@ watch(route, (next, _) => {
       <el-button class="right-icon" icon="User" @click="router.push({ path: '/user-center' })">
         {{ userData.account }} / {{ userData.nickname }}
       </el-button>
-      <el-icon @click="toggle" class="icon right-icon">
-        <FullScreen/>
-      </el-icon>
+<!--      <el-icon @click="toggle" class="icon right-icon">-->
+<!--        <FullScreen/>-->
+<!--      </el-icon>-->
       <el-switch class="right-icon" size="large" @change="mainStore.changeTheme()"
                  style="--el-switch-on-color: #2c2c2c; --el-switch-off-color: #f2f2f2;" v-model="isDark" inline-prompt
                  active-action-icon="Moon" inactive-action-icon="Sunny"/>

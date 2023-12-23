@@ -7,10 +7,6 @@ const props = defineProps({
     type: Array as PropType<any[]>,
     default: () => []
   },
-  category: {
-    type: Array as PropType<any[]>,
-    default: () => []
-  },
 })
 const mainStore = useMainStore()
 let dark = computed(() => mainStore.isDark)
@@ -19,6 +15,7 @@ watch(dark, (_, next) => {
 });
 let myChart: any;
 let pieCharts = ref<HTMLElement | null>();
+
 const initCharts = (isDark: boolean) => {
   type EChartsOption = echarts.EChartsOption;
   const chartsTheme = isDark ? "light" : "dark";
@@ -29,63 +26,51 @@ const initCharts = (isDark: boolean) => {
   var option: EChartsOption;
   option = {
     title: {
-      text: '作者文章总量统计（篇）',
-      subtext: '因数量过大，本数据已去除数量小于2的作者',
-      top: 10,
-      left: 10,
-    },
-    tooltip: {
-      trigger: 'axis',
-      formatter(params: any) {
-        return `
-        作者姓名：${params[0].name} </br> 
-        文章数量：${params[0].value}篇
-        `;
-      },
-      axisPointer: {
-        type: 'shadow',
-      },
-    },
-    grid: {
-      left: '5%',
-      right: '5%',
-      top: '0.7%',
-      bottom: "0.1%",
-      containLabel: true
-    },
-    xAxis: {
-      type: 'value',
-      show: true,
-    },
-    yAxis: {
-      type: 'category',
-      data: props.category
-    },
-    series: [
-      {
-        name: '作文总数',
-        type: 'bar',
-        label: {
-          show: true,
-          position: 'right',
-          formatter: '{c}',
-        },
+    text: '用户年龄饼图',
+    left: 'center'
+  },
+  tooltip: {
+    trigger: 'item'
+  },
+  legend: {
+    orient: 'vertical',
+    left: 'left'
+  },
+  series: [
+    {
+      name: 'Access From',
+      type: 'pie',
+      radius: '50%',
+      // data: [
+      //   { value: 1048, name: 'Search Engine' },
+      //   { value: 735, name: 'Direct' },
+      //   { value: 580, name: 'Email' },
+      //   { value: 484, name: 'Union Ads' },
+      //   { value: 300, name: 'Video Ads' }
+      // ],
+      data: props.countData,
+      emphasis: {
         itemStyle: {
-          color: '#0dbc79'
-        },
-        data: props.countData,
-      },
-
-    ]
+          shadowBlur: 10,
+          shadowOffsetX: 0,
+          shadowColor: 'rgba(0, 0, 0, 0.5)'
+        }
+      }
+    }
+  ]
   };
   option && myChart.setOption(option);
 }
 onMounted(() => {
-  initCharts(!mainStore.isDark)
+  setTimeout(() => {
+           initCharts(!mainStore.isDark)
+        }, 1000)
 })
+
+
 
 </script>
 <template>
-  <div ref="pieCharts" style="height: 12000px;width: 100%;background-color: white;" id="main"></div>
+  <div ref="pieCharts" style="height: 100%;width: 100%;background-color: white;" id="main"></div>
 </template>
 <style lang='less' scoped></style>

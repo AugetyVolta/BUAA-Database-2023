@@ -22,3 +22,7 @@ export function getTipsByFavor() {
 export function getTipsByComments() {
   return axios.get(`/api/getTipsByComments`)
 }
+
+export function getAge() {
+  return axios.get(`/api/getAgeDistribution`)
+}

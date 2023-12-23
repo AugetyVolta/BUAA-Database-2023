@@ -115,7 +115,9 @@ const initCharts = (isDark: boolean) => {
   option && myChart.setOption(option);
 }
 onMounted(() => {
-  initCharts(!mainStore.isDark)
+  setTimeout(() => {
+           initCharts(!mainStore.isDark)
+        }, 1000)
 })
 
 </script>

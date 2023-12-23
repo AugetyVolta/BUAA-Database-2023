@@ -2,8 +2,7 @@
 <script lang="ts" setup>
 import {ref, onUnmounted, onMounted} from 'vue';
 import { ElLoading } from 'element-plus';
-import {getPoetryCountTotal, getRecommendedBooks, getTipsByComments, getTipsByFavor} from '@/apis/home'
-import AuthorCharts from '@/components/Echarts/AuthorCharts.vue';
+import {getAge, getRecommendedBooks, getTipsByComments, getTipsByFavor} from '@/apis/home'
 import PieCharts from '@/components/Echarts/PieCharts.vue';
 import DynastyCharts from '@/components/Echarts/DynastyCharts.vue';
 let dynastyCountData = ref({
@@ -19,6 +18,7 @@ let authorByDynastyCountData = ref({
   category: [],
 })
 let  tableData = ref([])
+let ageData = ref([])
 const getEchartsData = async () => {
   const data1 = await getRecommendedBooks()
   console.log(data1)
@@ -26,7 +26,8 @@ const getEchartsData = async () => {
   dynastyCountData.value.category = data1.data.data.bookName
   const data2 = await getTipsByFavor()
   tableData.value = data2.data.data
-
+  const data3 = await getAge()
+  ageData.value = data3.data.data
   // const { data } = await getPoetryCountTotal()
   // data.dynasty_poems.forEach((element: any) => {
   //   dynastyCountData.value.countData.push(element.poem_count)
@@ -96,7 +97,7 @@ getEchartsData()
 <template>
   <div class="home-layout" v-if="isReload">
     <el-carousel indicator-position="outside" height="750px" pause-on-hover="true" interval="5000">
-    <el-carousel-item v-for="item in 2" :key="item">
+    <el-carousel-item v-for="item in 3" :key="item">
       <div v-if="item === 1">
          <el-row class="echart-box">
       <el-col :span="24">
@@ -136,6 +137,13 @@ getEchartsData()
     </el-main>
   </el-container>
 
+      </el-col>
+    </el-row>
+      </div>
+            <div v-if="item === 3">
+         <el-row class="echart-box">
+      <el-col :span="24">
+        <PieCharts :countData="ageData"></PieCharts>
       </el-col>
     </el-row>
       </div>
