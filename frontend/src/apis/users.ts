@@ -29,3 +29,7 @@ export function changePassword(data = {}) {
 export function modifyUserData(data = {}) {
     return axios.post('/api/modify_userdata', data)
 }
+
+export function getUserReport(account) {
+    return axios.get(`/api/getReport?account=${account}`)
+}

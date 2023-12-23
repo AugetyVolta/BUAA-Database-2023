@@ -4,6 +4,15 @@ import os
 import pandas as pd
 from django.db.models import Avg
 from django.http import JsonResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import matplotlib.pyplot as plt
 
 from backend.DigBooks import dig_books
 from backend.models import Book, Community, User, Favourite, Score, BookComment, UserBookRelation, Tip, Label, \
@@ -1408,4 +1417,121 @@ def upload(request):
     except Exception as e:
         res["code"] = 500
         res["message"] = "服务器错误：上传图片失败" + str(e)
+    return JsonResponse(res)
+
+
+def getAgeDistribution(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+
+        data = [{'value': 0, 'name': "0-20岁"}, {'value': 0, 'name': "20-40岁"}, {'value': 0, 'name': "40-60岁"},
+                {'value': 0, 'name': "60-80岁"}, {'value': 0, 'name': "其他"}]
+        users = User.objects.all()
+        for user in users:
+            age = int(user.age)
+            if 0 <= age < 20:
+                data[0]['value'] += 1
+            elif 20 <= age < 40:
+                data[1]['value'] += 1
+            elif 40 <= age < 60:
+                data[2]['value'] += 1
+            elif 60 <= age < 80:
+                data[3]['value'] += 1
+            else:
+                data[4]['value'] += 1
+        res['data'] = data
+        res["code"] = 200
+        res["message"] = "success"
+        print('-------------------upload-------------------')
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误" + str(e)
+    return JsonResponse(res)
+
+
+def getReport(request):
+    res = {"code": 400, "message": "", "data": None}
+    try:
+        user = User.objects.get(account=request.GET.get('account'))
+        collected_books = Favourite.objects.filter(user=user).count()
+        commented_books = UserBookRelation.objects.filter(user=user).count()
+        created_circles = OwnedCommunity.objects.filter(user=user).count()
+        posted_posts = Tip.objects.filter(user=user).count()
+        posted_comments = Comment.objects.filter(post_user=user).count()
+        start_time = "00:00:00"
+        end_time = "06:00:00"
+        morning = UserLog.objects.filter(user=user, create_time__time__gte=start_time,
+                                         create_time__time__lte=end_time).count()  # 0-6
+        start_time = "06:00:00"
+        end_time = "12:00:00"
+        afternoon = UserLog.objects.filter(user=user, create_time__time__gte=start_time,
+                                           create_time__time__lte=end_time).count()  # 6-12
+        start_time = "12:00:00"
+        end_time = "18:00:00"
+        evening = UserLog.objects.filter(user=user, create_time__time__gte=start_time,
+                                         create_time__time__lte=end_time).count()  # 12-18
+        start_time = "18:00:00"
+        end_time = "23:59:59"
+        night = UserLog.objects.filter(user=user, create_time__time__gte=start_time,
+                                       create_time__time__lte=end_time).count()  # 18-24
+        cnt = morning + afternoon + evening + night
+        cnt = 1 if cnt == 0 else cnt
+        morning = int(100 * morning / cnt)
+        afternoon = int(100 * afternoon / cnt)
+        evening = int(100 * evening / cnt)
+        night = int(100 * night / cnt)
+        activity_data = {'Morning': morning, 'Afternoon': afternoon, 'Evening': evening, 'Night': night}
+        # 生成统计图
+        labels = list(activity_data.keys())
+        values = list(activity_data.values())
+
+        fig, ax = plt.subplots()
+        ax.bar(labels, values, color='skyblue')
+        ax.set_ylabel('ratio')
+        ax.set_title('Log Time Range')
+
+        # 将 Matplotlib 图表保存为 PNG 文件
+        chart_filename = 'media/tmp.png'
+        fig.savefig(chart_filename, format='png', bbox_inches='tight')
+        plt.close()  # 关闭 Matplotlib 图表
+        # 报告模板
+        report_template = """
+        亲爱的{},
+        这一年里，你收藏了{}本书，评论了{}本书，创立了{}个圈子，发布了{}条帖子，发布了{}条评论。
+
+        下面是你的活动时间分析表：
+        """
+        # 使用字符串格式化填充数据
+        report = report_template.format(user.nickname, collected_books, commented_books, created_circles, posted_posts,
+                                        posted_comments)
+        font_path = "SimHei.ttf"  # 替换成你的中文 TrueType 字体文件的路径
+        pdfmetrics.registerFont(TTFont('SimHei', font_path))
+        # 生成 PDF 文件
+        pdf_filename = 'media/个人简报.pdf'
+        image_path = "media/tmp.png"
+        with open(pdf_filename, 'wb') as pdf_file:
+            c = canvas.Canvas(pdf_file, pagesize=letter)
+
+            # 设置字体和字体大小
+            c.setFont("SimHei", 12)
+
+            # 在 PDF 页面上绘制报告，指定文本框的宽度，实现自动换行
+            width, height = letter
+            text_object = c.beginText(12, height - 72)
+            text_object.setFont("SimHei", 12)
+            text_object.setTextOrigin(12, height - 72)
+
+            lines = report.split('\n')
+            for line in lines:
+                text_object.textLine(line)
+            c.drawText(text_object)
+            c.drawInlineImage(image_path, 12, height - 450, width=450, height=300)
+            c.save()
+        res['data'] = '个人简报.pdf'
+        res["code"] = 200
+        res["message"] = "success"
+        print('-------------------upload-------------------')
+    except Exception as e:
+        res["code"] = 500
+        res["message"] = "服务器错误" + str(e)
     return JsonResponse(res)

@@ -47,5 +47,7 @@ urlpatterns = [
     path('get_commentList', views.get_commentList),
     path('add_label', views.add_label),
     path('upload', views.upload),
-    path('downLoad_books', views.downLoad_books)
+    path('downLoad_books', views.downLoad_books),
+    path('getAgeDistribution', views.getAgeDistribution),
+    path('getReport',views.getReport)
 ]

@@ -6,7 +6,7 @@ import {ref, reactive, onMounted} from 'vue';
 import {ElMessage} from 'element-plus';
 import {useRouter} from 'vue-router';
 import JSEncrypt from 'jsencrypt'
-import {changePassword, modifyUserData} from '@/apis/users'
+import {changePassword, getUserReport, modifyUserData} from '@/apis/users'
 import {useMainStore} from '@/store/index'
 
 const mainStore = useMainStore()
@@ -90,6 +90,16 @@ const editPsd = () => {
   })
 }
 
+const photoBaseUrl = 'http://10.192.187.233:9000/'
+const getReport = () => {
+  getUserReport(userData.value.account).then((res: any) => {
+    if (res.data.code === 200) {
+      const fileUrl = photoBaseUrl + res.data.data
+      window.open(fileUrl, '_blank');
+    }
+  })
+}
+
 onMounted(() => {
   console.log(userData.account)
   console.log("hello")
@@ -122,6 +132,7 @@ onMounted(() => {
       <el-button icon="Top" type="primary" plain @click="$router.go(-1)">返回上级菜单</el-button>
       <el-button icon="EditPen" type="warning" plain @click="showEditPssswordDialog = true">修改登录密码</el-button>
       <el-button icon="Edit" type="primary" @click="onSubmit">修改个人信息</el-button>
+      <el-button icon="Download" type="primary" @click="getReport">导出个人简报</el-button>
     </dd>
     <el-dialog title="密码修改" v-model="showEditPssswordDialog" width="50%">
       <el-form label-width="100px" :model="passwordForm" :rules="psdEditRules">
