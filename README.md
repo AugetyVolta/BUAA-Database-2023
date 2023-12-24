@@ -10,7 +10,6 @@ python依赖在`requirements.txt`文件中，在项目文件夹终端下执行�
 
 ```shell
 pip install -r requirements.txt
-pip3 install django-cors-headers
 ```
 
 ### 项目启动
