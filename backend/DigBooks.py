@@ -49,7 +49,7 @@ def dig_books():
         print('我们正在爬取：{}页'.format((num / 25) + 1))
     result.head()
     # 把结果一步存为EXCEL
-    result.to_excel('豆瓣图书TOP250.xlsx', index=False)
+    # result.to_excel('豆瓣图书TOP250.xlsx', index=False)
     return book_data
 
 
