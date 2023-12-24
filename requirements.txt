@@ -1,4 +1,6 @@
 Django==4.2.7
 lxml==4.9.3
+matplotlib==3.8.0
 pandas==2.1.4
+reportlab==4.0.8
 Requests==2.31.0

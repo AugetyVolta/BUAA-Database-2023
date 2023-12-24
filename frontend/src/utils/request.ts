@@ -5,8 +5,7 @@ import { start, close } from './nporgress'
 import router from '@/router/index'
 /* eslint-disable */
 // const baseURL = 'http://127.0.0.1:9000' //本地测试环境
-//const baseURL = 'http://127.0.0.1:8000/' //服务器地址
-const baseURL = 'http://10.192.187.233:8000/'
+const baseURL = 'http://127.0.0.1:8000/' //服务器地址
 axios.defaults.withCredentials = true
 const service = axios.create({
   baseURL,

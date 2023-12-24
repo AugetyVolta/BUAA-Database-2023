@@ -11,7 +11,7 @@ module.exports = defineConfig({
     // 配置不同的后台API地址
     proxy: {
     '/api': {
-        target: 'http://10.192.187.233:8000/api/',
+        target: 'http://127.0.0.1:8000/api/',
         //ws: true,
         changeOrigin: true,
         pathRewrite: {

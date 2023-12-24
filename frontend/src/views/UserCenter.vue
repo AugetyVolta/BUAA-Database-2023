@@ -90,7 +90,7 @@ const editPsd = () => {
   })
 }
 
-const photoBaseUrl = 'http://10.192.187.233:9000/'
+const photoBaseUrl = 'http://127.0.0.1:9000/'
 const getReport = () => {
   getUserReport(userData.value.account).then((res: any) => {
     if (res.data.code === 200) {

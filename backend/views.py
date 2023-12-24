@@ -433,7 +433,7 @@ def upload_book(request):
             data = json.loads(request.body)
             user = User.objects.get(id=data.get('user_id'))
             if user.privilege <= 2:
-                file_path = "D:/桌面/数据库/Project/BUAA-Database/media/" + data.get('filename')
+                file_path = "media/" + data.get('filename')
                 df = pd.read_excel(file_path)
                 book_data = df.to_dict(orient='records')
                 books_to_create = [Book(**data) for data in book_data]

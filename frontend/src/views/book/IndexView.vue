@@ -243,7 +243,7 @@ const beforeUpload = (file) => {
   fileList.value.push(file)
   return true;
 };
-const photoBaseUrl = 'http://10.192.187.233:9000/'
+const photoBaseUrl = 'http://127.0.0.1:9000/'
 const handleUploadSuccess = (response, file, fileList) => {
   // 处理上传成功的逻辑，可以从 response 中获取上传成功后的图片地址
   dataEditForm.value.pic_url = photoBaseUrl + file.name
@@ -465,7 +465,7 @@ const editRow = (value: any) => {
           </el-form-item>
           <el-form-item label="上传图片">
             <el-upload
-                action="http://10.192.187.233:8000/api/upload"
+                action="http://127.0.0.1:8000/api/upload"
                 :before-upload="beforeUpload"
                 :on-success="handleUploadSuccess"
                 :on-remove="handleRemove"
@@ -499,7 +499,7 @@ const editRow = (value: any) => {
                 :on-success="handleUploadBookSuccess"
                 :on-remove="handleBookRemove"
                 :file-list="bookFileList"
-                action="http://10.192.187.233:8000/api/upload">
+                action="http://127.0.0.1:8000/api/upload">
               <i class="el-icon-upload"></i>
               <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
               <div class="el-upload__tip" slot="tip">只能上传.xlsx文件</div>
@@ -528,7 +528,7 @@ const editRow = (value: any) => {
           </el-form-item>
           <el-form-item label="上传图片">
             <el-upload
-                action="http://10.192.187.233:8000/api/upload"
+                action="http://127.0.0.1:8000/api/upload"
                 :before-upload="beforeUpload"
                 :on-success="handleUploadSuccess"
                 :on-remove="handleRemove"

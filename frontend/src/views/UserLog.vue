@@ -167,7 +167,7 @@ let dataEditForm = ref<TaskEditFormType>({
   user_id: 0
 })
 
-const photoBaseUrl = 'http://10.192.187.233:9000/'
+const photoBaseUrl = 'http://127.0.0.1:9000/'
 const downLoadLog = async () => {
   params.value.page = 1
   if (searchDate.value && searchDate.value.length > 0) {
