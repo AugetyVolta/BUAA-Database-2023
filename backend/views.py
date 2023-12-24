@@ -555,13 +555,13 @@ def get_bookDetailList(request):
         tag = request.GET.get('tag')
         books = Book.objects.filter(name__icontains=request.GET.get('title'),
                                     author__icontains=request.GET.get('author'),
-                                    description__icontains=request.GET.get('introduction')).order_by("id")[
-                start_position:start_position + count_to_fetch]
+                                    description__icontains=request.GET.get('introduction')).order_by("id")
         res['data'] = []
-        res['total'] = Book.objects.filter(name__icontains=request.GET.get('title'),
-                                           author__icontains=request.GET.get('author'),
-                                           description__icontains=request.GET.get('introduction')).count()
+        # res['total'] = Book.objects.filter(name__icontains=request.GET.get('title'),
+        #                                    author__icontains=request.GET.get('author'),
+        #                                    description__icontains=request.GET.get('introduction')).count()
         data_item = {"id": 0, "title": "", "author": "", "introduction": "", "score": 0.0, "liked_times": 0, "tag": ""}
+        bookList = []
         for book in books:
             data_item['tag'] = ""
             bookLabelRelations = BookLabelRelation.objects.filter(book=book)
@@ -577,8 +577,11 @@ def get_bookDetailList(request):
                     'score__avg') if Score.objects.filter(book_id=book.id) else 0
                 data_item['liked_times'] = Favourite.objects.filter(book=book).count()
                 res['data'].append(data_item)
+                bookList.append(book)
             data_item = {"id": 0, "title": "", "author": "", "introduction": "", "score": 0.0, "liked_times": 0,
                          "tag": ""}
+        res['total'] = len(bookList)
+        res['data'] = res['data'][start_position:start_position + count_to_fetch]
         res["code"] = 200
         res["message"] = "success"
         print('-------------------get_bookDetailList-------------------')
